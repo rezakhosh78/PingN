@@ -1,80 +1,79 @@
-# PingN
+<p align="center">
+  <img src="PingN/PingN.Desktop/PingN.png" width="112" alt="PingN logo">
+</p>
 
-### PingN is a desktop client built from the established upstream codebase, with Cloudflare WARP, Desync, and SNI Spoofing Plus integrations.
+<h1 align="center">PingN</h1>
 
-The client supports Windows, Linux, and macOS, including [Xray](https://github.com/XTLS/Xray-core), [sing-box](https://github.com/SagerNet/sing-box), and the other core options supported by the upstream desktop client. PingN's bundled Xray, Desync, and SNI Spoofing Plus runtimes target Windows x64.
-
----
-
-## Download / 下载
-
-PingN does not have a published release yet. Follow the upstream build instructions to build PingN. A Windows x64 publish includes the bundled Xray core and the Desync/SNI runtime files.
-
-برای PingN هنوز نسخهٔ منتشرشده‌ای وجود ندارد. برای ساخت از دستورهای PingN استفاده کنید؛ خروجی Windows x64 شامل هستهٔ Xray و فایل‌های runtime مربوط به Desync و SNI است.
-
-
-> [!TIP]
-> PingN is the desktop version. For the mobile version, please visit the PingNG \
-> PingN 是电脑版，手机版请访问 PingNG
->
-> https://github.com/2dust/v2rayNG
+<p align="center">A V2rayN-based desktop proxy client with WARP, Desync, and SNI additions.</p>
+<p align="center"><a href="README.fa.md">فارسی</a> · <a href="README.md">English</a></p>
 
 ---
 
-## Documentation / 使用文档
+## About PingN
 
-Read the Wiki for usage guides and configuration details.
+**PingN** is a desktop proxy client based on the open-source **v2rayN** project. It keeps the familiar profile, subscription, routing, DNS, system proxy, and TUN workflow, then adds dedicated Cloudflare WARP and connection tools.
 
-请阅读 Wiki 获取使用说明和配置教程。
+**Current display version:** <code>PingN-v7.25.6-PiN52</code>
 
-[https://github.com/2dust/v2rayN/wiki](https://github.com/2dust/v2rayN/wiki)
+## PingN compared with V2rayN
 
-## PingN additions
+The V2rayN column refers to the upstream desktop code used as PingN’s base. It does not describe features that may have appeared in later V2rayN releases.
 
-- The app display version is `PingN-v7.25.6-PiN52`; its numeric release version remains `7.25.6` for update checks.
-- The **Add [WARP AmneziaWG]** menu creates an Oberon-backed profile. Its editor lets you choose IPv4 or IPv6, a fast or expanded endpoint scan, and whether to scan automatically when connecting. All three choices are saved with the profile. Oberon exposes a local SOCKS5 listener, and PingN routes TCP through it. UDP relay is not available in Oberon's local proxy mode.
-- The **Add [WARP MASQUE/H2]** editor also saves whether endpoint scanning runs automatically when connecting; the default remains enabled.
-- The updated Oberon v0.4.5 source is included under `Oberon/`. Run `powershell -ExecutionPolicy Bypass -File .\Build-Oberon.ps1` with Go 1.25 or later before publishing to build the Windows x64 executable into `PingN/PingN.Desktop/BundledCores/Oberon`. This rebuild is required for the editor's automatic-scan-off option (`-no-scan`) and IPv6 scanning; the bundled executable remains v0.4.3 until the script is run.
-- Desync profiles and advanced values are stored per profile. Preset values are fixed; `Custom` exposes split, fooling, Bad Sequence, repeats, Fake SNI, and AutoTTL settings. The bundled `winws2` runtime supports Xray TLS/Reality TCP traffic and requests Administrator approval.
-- **SNI Spoofing Plus** has a separate per-profile switch, Fake SNI list, and uTLS fingerprint in both standard and custom Xray profile editors. It runs the bundled CLI through a local TCP listener for standard TLS profiles and requests Administrator approval. The official WinDivert 2.2.2 x64 DLL and driver are next to the CLI; see `WinDivert-LICENSE.txt` and [`Tools/SniSpoofingPlus/README.md`](PingN/PingN.Desktop/Tools/SniSpoofingPlus/README.md).
-- Windows x64 publish bundles Xray core `26.10.21`, `wintun.dll`, and the GeoIP/geosite databases in the paths used by the existing core manager. Other target platforms continue to use PingN's core installation flow.
-- Desync runtime components are included under [`Tools/Desync`](PingN/PingN.Desktop/Tools/Desync/README.md), with third-party notices and license texts beside them.
+| Feature | Upstream V2rayN base | PingN |
+| --- | --- | --- |
+| Profile and subscription management | Included | Inherited from V2rayN |
+| Routing, DNS, system proxy, and TUN | Included | Inherited from V2rayN |
+| Xray and sing-box cores | Supported | Supported |
+| WARP AmneziaWG | No PingN-specific integration in the base | Oberon integration; IPv4/IPv6 endpoint scans, fast or expanded scan, and a per-profile automatic-scan switch. Local SOCKS5 mode carries TCP. |
+| WARP MASQUE/H2 | No PingN-specific integration in the base | usque integration; endpoint scanning and a per-profile automatic-scan switch. Uses a dedicated local SOCKS5 port, preferring <code>20808</code> and choosing another free port if needed, separate from PingN’s main <code>10808</code> listener. |
+| Desync | No PingN-specific integration in the base | Per-profile presets and custom settings, plus a scanner for candidate settings. |
+| SNI Spoofing Plus | No PingN-specific integration in the base | Per-profile Fake SNI and uTLS settings for standard Xray TLS-over-TCP profiles. |
 
----
+## Supported platforms
 
-## Supported Platforms / 支持平台
+| Platform | Architectures |
+| --- | --- |
+| Windows | x64, x86, ARM64 |
+| Linux | x64, ARM64, riscv64, loong64 |
+| macOS | x64, ARM64 |
 
-| Platform / 平台 | x64 | x86 | arm64 | riscv64 | loong64 |
-| --- | --- | --- | --- | --- | --- |
-| Windows | ✅ | ✅ | ✅ | - | - |
-| Linux | ✅ | - | ✅ | ✅ | ✅ |
-| macOS | ✅ | - | ✅ | - | - |
+PingN’s added integrations have narrower support:
 
-Minimum OS requirements: [Release files introduction](https://github.com/2dust/v2rayN/wiki/Release-files-introduction) / 最低系统要求：[发布文件介绍](https://github.com/2dust/v2rayN/wiki/Release-files-introduction)
+| PingN integration | Supported platforms |
+| --- | --- |
+| WARP AmneziaWG | Windows x64 |
+| WARP MASQUE/H2 | Windows x64 and ARM64 |
+| Desync | Windows x64 |
+| SNI Spoofing Plus | Windows x64 |
 
----
+Desync and SNI Spoofing Plus use WinDivert and request Windows Administrator approval when started. SNI Spoofing Plus applies to standard TLS over TCP; it does not support Reality, MASQUE, WARP WireGuard, or non-TLS profiles.
 
-## GPG Verification / GPG 签名校验
+## Downloads
 
-Release files are signed with GPG to verify authenticity and integrity, helping prevent mirror, ISP, or CDN hijacking.
+Download the package for your operating system and architecture from this repository’s **Releases** page. Release assets are signed; the release includes the public key and detached GPG signatures.
 
-发布文件已使用 GPG 签名，可用于校验文件真实性与完整性，预防镜像站、运营商或 CDN 劫持。
+The multi-platform release workflow asks for a numeric tag, such as <code>7.25.6</code>, and a release title, such as <code>PingN-v7.25.6-PiN52</code>.
 
-### Fingerprint / 公钥指纹
+## License
 
-```text
-7694 5E9F 3E9A 168F 8070 F195 805D 661C
-134D FAF6 8903 C199 463C 31E5 AE90 3AE0
-```
+PingN’s main source is licensed under [GPL-3.0](LICENSE). Bundled components keep their own licenses and notices; see <code>third_party/licenses/</code> and the notices beside each component.
 
----
+PingN is an independent project based on v2rayN and is not an official v2rayN release. PingNG is the separate Android client.
 
-## Community / 社区
+## Projects used
 
-Telegram Group / Telegram 群组：
+| Project | Use in PingN |
+| --- | --- |
+| [2dust/v2rayN](https://github.com/2dust/v2rayN) | Desktop client foundation and inherited profile, routing, and core-management features. |
+| [XTLS/Xray-core](https://github.com/XTLS/Xray-core) | Supported proxy core. |
+| [SagerNet/sing-box](https://github.com/SagerNet/sing-box) | Supported proxy core. |
+| [oberon-core/oberon](https://github.com/oberon-core/oberon) and [AmneziaWG](https://github.com/amnezia-vpn/amneziawg-go) | WARP AmneziaWG profile creation, endpoint scanning, and local proxy runtime. |
+| [Diniboy1123/usque](https://github.com/Diniboy1123/usque) | WARP MASQUE/H2 runtime. |
+| [rezakhosh78/BlackHole](https://github.com/rezakhosh78/BlackHole) and [bol-van/zapret2](https://github.com/bol-van/zapret2) | Source of bundled Windows Desync runtime files. BlackHole’s GUI and application source are not copied into PingN. |
+| [aleskxyz/sni-spoofing-go](https://github.com/aleskxyz/sni-spoofing-go) | CLI used by the SNI Spoofing Plus integration. |
+| [basil00/WinDivert](https://github.com/basil00/WinDivert) | Packet-diversion driver used by the Windows Desync and SNI tools. |
+| [vernette/warpscout](https://github.com/vernette/warpscout) | WARP IPv4 and IPv6 endpoint-pool definitions used by Oberon’s scanner. |
+| [Avalonia UI](https://github.com/AvaloniaUI/Avalonia), [Semi.Avalonia](https://github.com/irihitech/Semi.Avalonia), and [ReactiveUI](https://github.com/reactiveui/ReactiveUI) | Cross-platform desktop UI framework and components. |
+| [Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat), [2dust/sing-box-rules](https://github.com/2dust/sing-box-rules), and [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat) | Routing rules and GeoIP/geosite data. |
+| [rezakhosh78/PingNG](https://github.com/rezakhosh78/PingNG) | WARP behavior reference for the mobile client; PingNG app source is not copied into PingN. |
 
-[https://t.me/v2rayN](https://t.me/v2rayN)
-
-Telegram Channel / Telegram 频道：
-
-[https://t.me/github_2dust](https://t.me/github_2dust)
