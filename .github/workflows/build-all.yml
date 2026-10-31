@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Numeric release tag (for example 7.25.6; used by WebAPI update metadata)
+        description: Version or display tag (for example v7.25.6-PiN52; the GitHub tag is normalized to 7.25.6)
         required: true
         type: string
       release_name:
@@ -20,6 +20,8 @@ jobs:
   create-release:
     name: Create or update the release
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.validate.outputs.release_tag }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
@@ -27,6 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Validate release tag
+        id: validate
         shell: bash
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
@@ -34,10 +37,11 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          if [[ ! "$RELEASE_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Use a numeric release tag such as 7.25.6. The WebAPI embeds this value as its update version."
+          if [[ ! "$RELEASE_TAG" =~ ^(PingN-)?[vV]?([0-9]+\.[0-9]+\.[0-9]+)([-+][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Use a version such as 7.25.6 or v7.25.6-PiN52. The release tag will be normalized to its numeric version."
             exit 1
           fi
+          normalized_tag="${BASH_REMATCH[2]}"
           if [[ -z "${RELEASE_NAME//[[:space:]]/}" ]]; then
             echo "Release name cannot be empty."
             exit 1
@@ -46,11 +50,12 @@ jobs:
             echo "Add the GPG_PRIVATE_KEY repository secret before starting a signed release."
             exit 1
           fi
+          echo "release_tag=$normalized_tag" >> "$GITHUB_OUTPUT"
 
       - name: Create or rename release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_TAG: ${{ steps.validate.outputs.release_tag }}
           RELEASE_NAME: ${{ inputs.release_name }}
         shell: bash
         run: |
@@ -73,7 +78,7 @@ jobs:
     needs: create-release
     uses: ./.github/workflows/pub-key.yml
     with:
-      release_tag: ${{ inputs.release_tag }}
+      release_tag: ${{ needs.create-release.outputs.release_tag }}
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
@@ -81,7 +86,7 @@ jobs:
     needs: create-release
     uses: ./.github/workflows/release-WebAPI.yml
     with:
-      release_tag: ${{ inputs.release_tag }}
+      release_tag: ${{ needs.create-release.outputs.release_tag }}
     secrets: inherit
 
   dispatch-builds:
@@ -90,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
-      RELEASE_TAG: ${{ inputs.release_tag }}
+      RELEASE_TAG: ${{ needs.create-release.outputs.release_tag }}
       SOURCE_REF: ${{ github.ref_name }}
     steps:
       - name: Start platform build workflows
