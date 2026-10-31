@@ -1,4 +1,4 @@
-name: release v2rayN.WebAPI
+name: release PingN.WebAPI
 
 on:
   workflow_call:
@@ -37,7 +37,7 @@ jobs:
     with:
       release_tag: ${{ inputs.release_tag }}
       artifact_name: WebAPI-release-packages
-      file_pattern: 'v2rayN-*-WebAPI*.zip'
+      file_pattern: 'PingN-*-WebAPI*.zip'
     secrets: { GPG_PRIVATE_KEY: "${{ secrets.GPG_PRIVATE_KEY }}" }
 
   release-web-manifest:

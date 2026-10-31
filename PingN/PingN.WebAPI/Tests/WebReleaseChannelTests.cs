@@ -22,9 +22,9 @@ public class WebReleaseChannelTests
     [Test]
     public async Task ReleaseIndexUrlIsBuiltFromTheBuildRepository()
     {
-        await WebReleaseChannel.BuildReleaseIndexUrl("2dust/v2rayN")
-            .Should().BeEqualTo("https://api.github.com/repos/2dust/v2rayN/releases?per_page=100");
-        await WebReleaseChannel.DefaultRepository.Should().BeEqualTo("2dust/v2rayN");
+        await WebReleaseChannel.BuildReleaseIndexUrl("rezakhosh78/PingN")
+            .Should().BeEqualTo("https://api.github.com/repos/rezakhosh78/PingN/releases?per_page=100");
+        await WebReleaseChannel.DefaultRepository.Should().BeEqualTo("rezakhosh78/PingN");
 
         var rejected = false;
         try { _ = WebReleaseChannel.BuildReleaseIndexUrl("2dust/v2rayN/../../evil"); }

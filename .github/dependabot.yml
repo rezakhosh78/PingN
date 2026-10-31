@@ -6,6 +6,6 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "nuget"
-    directory: "/v2rayN"
+    directory: "/PingN"
     schedule:
       interval: "daily"

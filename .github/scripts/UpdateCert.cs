@@ -56,7 +56,7 @@ var client = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
 
 var outputDir = args.Length > 0 
     ? args[0] 
-    : Path.Combine(Environment.CurrentDirectory, "v2rayN", "ServiceLib", "Sample");
+    : Path.Combine(Environment.CurrentDirectory, "PingN", "ServiceLib", "Sample");
 
 Directory.CreateDirectory(outputDir);
 

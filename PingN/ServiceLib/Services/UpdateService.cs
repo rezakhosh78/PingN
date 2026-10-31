@@ -174,7 +174,7 @@ public partial class UpdateService(Config config, Func<bool, string, Task> updat
     {
         var coreInfo = CoreInfoManager.Instance.GetCoreInfo(type);
         var tagName = string.Empty;
-        if (preRelease || coreInfo?.LockedMaxVersion != null)
+        if (preRelease || coreInfo?.LockedMaxVersion != null || type == ECoreType.PingN)
         {
             var url = coreInfo?.ReleaseApiUrl;
             var result = await downloadHandle.TryDownloadString(url, blProxy, Global.AppName, cancellationToken);
@@ -184,7 +184,11 @@ public partial class UpdateService(Config config, Func<bool, string, Task> updat
             }
 
             var gitHubReleases = JsonUtils.Deserialize<List<GitHubRelease>>(result);
-            var gitHubRelease = preRelease ? gitHubReleases?.First() : gitHubReleases?.First(r => r.Prerelease == false);
+            var gitHubRelease = preRelease
+                ? gitHubReleases?.FirstOrDefault()
+                : type == ECoreType.PingN
+                    ? gitHubReleases?.FirstOrDefault(r => !r.Prerelease) ?? gitHubReleases?.FirstOrDefault()
+                    : gitHubReleases?.FirstOrDefault(r => !r.Prerelease);
             tagName = gitHubRelease?.TagName;
             //var body = gitHubRelease?.Body;
 

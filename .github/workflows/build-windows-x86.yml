@@ -22,11 +22,11 @@ jobs:
       matrix:
         include:
           - flavor: wpf
-            project: ./v2rayN/v2rayN/v2rayN.csproj
-            zip_name: v2rayN-windows-86.zip
+            project: ./PingN/PingN/PingN.csproj
+            zip_name: PingN-windows-86.zip
           - flavor: desktop
-            project: ./v2rayN/v2rayN.Desktop/v2rayN.Desktop.csproj
-            zip_name: v2rayN-windows-86-desktop.zip
+            project: ./PingN/PingN.Desktop/PingN.Desktop.csproj
+            zip_name: PingN-windows-86-desktop.zip
 
     steps:
       - name: Checkout
@@ -75,7 +75,7 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          dotnet publish "./v2rayN/AmazTool/AmazTool.csproj" `
+          dotnet publish "./PingN/AmazTool/AmazTool.csproj" `
             -c Release `
             -r win-x86 `
             -p:SelfContained=true `

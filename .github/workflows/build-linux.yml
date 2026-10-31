@@ -54,8 +54,8 @@ jobs:
       run: |
         mkdir -p "$GITHUB_WORKSPACE/dist/deb"
         rsync -av "$HOME/debbuild/" "$GITHUB_WORKSPACE/dist/deb/" || true
-        find "$GITHUB_WORKSPACE/dist/deb" -name "v2rayn_*_amd64.deb" -exec mv {} "$GITHUB_WORKSPACE/dist/deb/v2rayN-linux-64.deb" \; || true
-        find "$GITHUB_WORKSPACE/dist/deb" -name "v2rayn_*_arm64.deb" -exec mv {} "$GITHUB_WORKSPACE/dist/deb/v2rayN-linux-arm64.deb" \; || true
+        find "$GITHUB_WORKSPACE/dist/deb" -name "PingN_*_amd64.deb" -exec mv {} "$GITHUB_WORKSPACE/dist/deb/PingN-linux-64.deb" \; || true
+        find "$GITHUB_WORKSPACE/dist/deb" -name "PingN_*_arm64.deb" -exec mv {} "$GITHUB_WORKSPACE/dist/deb/PingN-linux-arm64.deb" \; || true
         echo "==== Dist tree ===="
         ls -R "$GITHUB_WORKSPACE/dist/deb" || true
     - name: Upload DEB artifact
@@ -113,8 +113,8 @@ jobs:
       run: |
         mkdir -p "$GITHUB_WORKSPACE/dist/rpm"
         rsync -av "$HOME/rpmbuild/RPMS/" "$GITHUB_WORKSPACE/dist/rpm/" || true
-        find "$GITHUB_WORKSPACE/dist/rpm" -name "v2rayN-*-1*.x86_64.rpm"  -exec mv {} "$GITHUB_WORKSPACE/dist/rpm/v2rayN-linux-rhel-64.rpm" \;  || true
-        find "$GITHUB_WORKSPACE/dist/rpm" -name "v2rayN-*-1*.aarch64.rpm" -exec mv {} "$GITHUB_WORKSPACE/dist/rpm/v2rayN-linux-rhel-arm64.rpm" \; || true
+        find "$GITHUB_WORKSPACE/dist/rpm" -name "PingN-*-1*.x86_64.rpm"  -exec mv {} "$GITHUB_WORKSPACE/dist/rpm/PingN-linux-rhel-64.rpm" \;  || true
+        find "$GITHUB_WORKSPACE/dist/rpm" -name "PingN-*-1*.aarch64.rpm" -exec mv {} "$GITHUB_WORKSPACE/dist/rpm/PingN-linux-rhel-arm64.rpm" \; || true
         echo "==== Dist tree ===="
         ls -R "$GITHUB_WORKSPACE/dist/rpm" || true
     - name: Upload RPM artifact
@@ -154,7 +154,7 @@ jobs:
       run: |
         mkdir -p "$GITHUB_WORKSPACE/dist/rpm-riscv64"
         rsync -av "$HOME/rpmbuild/RPMS/" "$GITHUB_WORKSPACE/dist/rpm-riscv64/" || true
-        find "$GITHUB_WORKSPACE/dist/rpm-riscv64" -name "*.riscv64.rpm" -exec mv {} "$GITHUB_WORKSPACE/dist/rpm-riscv64/v2rayN-linux-rhel-riscv64.rpm" \; || true
+        find "$GITHUB_WORKSPACE/dist/rpm-riscv64" -name "*.riscv64.rpm" -exec mv {} "$GITHUB_WORKSPACE/dist/rpm-riscv64/PingN-linux-rhel-riscv64.rpm" \; || true
         echo "==== Dist tree ===="
         ls -R "$GITHUB_WORKSPACE/dist/rpm-riscv64" || true
     - name: Upload RPM artifact
@@ -195,7 +195,7 @@ jobs:
       run: |
         mkdir -p "$GITHUB_WORKSPACE/dist/deb-riscv64"
         rsync -av "$HOME/debbuild/" "$GITHUB_WORKSPACE/dist/deb-riscv64/" || true
-        find "$GITHUB_WORKSPACE/dist/deb-riscv64" -name "*.deb" -exec mv {} "$GITHUB_WORKSPACE/dist/deb-riscv64/v2rayN-linux-riscv64.deb" \; || true
+        find "$GITHUB_WORKSPACE/dist/deb-riscv64" -name "*.deb" -exec mv {} "$GITHUB_WORKSPACE/dist/deb-riscv64/PingN-linux-riscv64.deb" \; || true
         echo "==== Dist tree ===="
         ls -R "$GITHUB_WORKSPACE/dist/deb-riscv64" || true
     - name: Upload DEB artifact
@@ -330,11 +330,11 @@ jobs:
         run_cmd "printf 'nameserver 10.0.2.3\nnameserver 1.1.1.1\n' >/etc/resolv.conf"
         run_cmd "apt-get update || apt-get update || apt-get update"
         run_cmd "DEBIAN_FRONTEND=noninteractive apt-get install -y sudo git rsync findutils tar gzip unzip which curl jq wget file ca-certificates desktop-file-utils xdg-utils fakeroot dpkg-dev gcc make libc6-dev libgcc-s1 libstdc++6 zlib1g libatomic1 fuse3"
-        run_cmd "rm -rf /root/v2rayN-src"
-        run_cmd "rsync -a --info=progress2 /workspace/repo/ /root/v2rayN-src/"
-        run_cmd "cd /root/v2rayN-src && git config --global --add safe.directory /root/v2rayN-src"
-        run_cmd "cd /root/v2rayN-src && chmod 755 package-debian-loong.sh"
-        send -- "cd /root/v2rayN-src; cat >/tmp/run-loong-build.sh <<'SCRIPT'\nset +e\nset -o pipefail\nbash -x ./package-debian-loong.sh \"\$RELEASE_TAG\" 2>&1 | tee /tmp/build.log\nrc=\$?\nmkdir -p /workspace/dist/deb-loong64\ncp -av /root/debbuild/*.deb /workspace/dist/deb-loong64/ 2>/dev/null || true\necho __BUILD_DONE__\$rc\nSCRIPT\nRELEASE_TAG=\"$release_tag\" bash /tmp/run-loong-build.sh\r"
+        run_cmd "rm -rf /root/PingN-src"
+        run_cmd "rsync -a --info=progress2 /workspace/repo/ /root/PingN-src/"
+        run_cmd "cd /root/PingN-src && git config --global --add safe.directory /root/PingN-src"
+        run_cmd "cd /root/PingN-src && chmod 755 package-debian-loong.sh"
+        send -- "cd /root/PingN-src; cat >/tmp/run-loong-build.sh <<'SCRIPT'\nset +e\nset -o pipefail\nbash -x ./package-debian-loong.sh \"\$RELEASE_TAG\" 2>&1 | tee /tmp/build.log\nrc=\$?\nmkdir -p /workspace/dist/deb-loong64\ncp -av /root/debbuild/*.deb /workspace/dist/deb-loong64/ 2>/dev/null || true\necho __BUILD_DONE__\$rc\nSCRIPT\nRELEASE_TAG=\"$release_tag\" bash /tmp/run-loong-build.sh\r"
         expect {
           -re "__BUILD_DONE__0" { send -- "poweroff\r" }
           default { exit 1 }
@@ -345,7 +345,7 @@ jobs:
       run: |
         set -euo pipefail
         mkdir -p "$GITHUB_WORKSPACE/dist/deb-loong64"
-        find "$GITHUB_WORKSPACE/dist/deb-loong64" -name "*.deb" -exec mv {} "$GITHUB_WORKSPACE/dist/deb-loong64/v2rayN-linux-loong64.deb" \; || true
+        find "$GITHUB_WORKSPACE/dist/deb-loong64" -name "*.deb" -exec mv {} "$GITHUB_WORKSPACE/dist/deb-loong64/PingN-linux-loong64.deb" \; || true
         echo "==== Dist tree ===="
         ls -R "$GITHUB_WORKSPACE/dist/deb-loong64"
     - name: Upload DEB artifact
@@ -480,11 +480,11 @@ jobs:
         run_cmd "printf 'nameserver 10.0.2.3\nnameserver 1.1.1.1\n' >/etc/resolv.conf"
         run_cmd "dnf -y makecache || dnf -y makecache || dnf -y makecache"
         run_cmd "dnf -y install sudo git rpm-build rpmdevtools dnf-plugins-core rsync findutils tar gzip unzip which curl jq file ca-certificates fuse3 --nogpgcheck"
-        run_cmd "rm -rf /root/v2rayN-src"
-        run_cmd "rsync -a --info=progress2 /workspace/repo/ /root/v2rayN-src/"
-        run_cmd "cd /root/v2rayN-src && git config --global --add safe.directory /root/v2rayN-src"
-        run_cmd "cd /root/v2rayN-src && chmod 755 package-rhel-loong.sh"
-        send -- "cd /root/v2rayN-src; cat >/tmp/run-loong-rpm-build.sh <<'SCRIPT'\nset +e\nset -o pipefail\nbash -x ./package-rhel-loong.sh \"\$RELEASE_TAG\" 2>&1 | tee /tmp/build.log\nrc=\$?\nmkdir -p /workspace/dist/rpm-loong64\nfind /root/rpmbuild/RPMS -name '*.rpm' -exec cp -av {} /workspace/dist/rpm-loong64/ \\; 2>/dev/null || true\necho __BUILD_DONE__\$rc\nSCRIPT\nRELEASE_TAG=\"$release_tag\" bash /tmp/run-loong-rpm-build.sh\r"
+        run_cmd "rm -rf /root/PingN-src"
+        run_cmd "rsync -a --info=progress2 /workspace/repo/ /root/PingN-src/"
+        run_cmd "cd /root/PingN-src && git config --global --add safe.directory /root/PingN-src"
+        run_cmd "cd /root/PingN-src && chmod 755 package-rhel-loong.sh"
+        send -- "cd /root/PingN-src; cat >/tmp/run-loong-rpm-build.sh <<'SCRIPT'\nset +e\nset -o pipefail\nbash -x ./package-rhel-loong.sh \"\$RELEASE_TAG\" 2>&1 | tee /tmp/build.log\nrc=\$?\nmkdir -p /workspace/dist/rpm-loong64\nfind /root/rpmbuild/RPMS -name '*.rpm' -exec cp -av {} /workspace/dist/rpm-loong64/ \\; 2>/dev/null || true\necho __BUILD_DONE__\$rc\nSCRIPT\nRELEASE_TAG=\"$release_tag\" bash /tmp/run-loong-rpm-build.sh\r"
         expect {
           -re "__BUILD_DONE__0" { send -- "poweroff\r" }
           default { exit 1 }
@@ -495,7 +495,7 @@ jobs:
       run: |
         set -euo pipefail
         mkdir -p "$GITHUB_WORKSPACE/dist/rpm-loong64"
-        find "$GITHUB_WORKSPACE/dist/rpm-loong64" -name "*.loongarch64.rpm" -exec mv {} "$GITHUB_WORKSPACE/dist/rpm-loong64/v2rayN-linux-rhel-loong64.rpm" \; || true
+        find "$GITHUB_WORKSPACE/dist/rpm-loong64" -name "*.loongarch64.rpm" -exec mv {} "$GITHUB_WORKSPACE/dist/rpm-loong64/PingN-linux-rhel-loong64.rpm" \; || true
         echo "==== Dist tree ===="
         ls -R "$GITHUB_WORKSPACE/dist/rpm-loong64"
     - name: Upload RPM artifact
