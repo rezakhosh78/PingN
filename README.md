@@ -17,6 +17,9 @@
 TRON:
 TUnX9wBWzhD2AK9GqB9FJekKaxCvYJNh18
 
+Nowpayment:
+https://nowpayments.io/donation/pingplas
+
 ## PingN compared with V2rayN
 
 The V2rayN column refers to the upstream desktop code used as PingN’s base. It does not describe features that may have appeared in later V2rayN releases.
