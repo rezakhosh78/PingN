@@ -870,7 +870,7 @@ jobs:
           context: .
           file: ./PingN/PingN.WebAPI/Containerfile
           platforms: ${{ matrix.platform }}
-          tags: PingN-webapi:ci
+          tags: pingn-webapi:ci
           build-args: |
             RID=${{ matrix.rid }}
             WEB_VERSION=${{ needs.identity.outputs.version }}
