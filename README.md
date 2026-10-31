@@ -13,7 +13,9 @@
 
 **PingN** is a desktop proxy client based on the open-source **v2rayN** project. It keeps the familiar profile, subscription, routing, DNS, system proxy, and TUN workflow, then adds dedicated Cloudflare WARP and connection tools.
 
-**Current display version:** <code>PingN-v7.25.6-PiN52</code>
+## Support
+TRON:
+TUnX9wBWzhD2AK9GqB9FJekKaxCvYJNh18
 
 ## PingN compared with V2rayN
 
@@ -51,8 +53,6 @@ Desync and SNI Spoofing Plus use WinDivert and request Windows Administrator app
 ## Downloads
 
 Download the package for your operating system and architecture from this repository’s **Releases** page. Release assets are signed; the release includes the public key and detached GPG signatures.
-
-The multi-platform release workflow asks for a numeric tag, such as <code>7.25.6</code>, and a release title, such as <code>PingN-v7.25.6-PiN52</code>.
 
 ## License
 
