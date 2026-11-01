@@ -68,6 +68,10 @@ PingN’s added integrations have narrower support:
 | 🌐 WARP MASQUE/H2 | Windows x64 and ARM64 |
 | 🌀 Desync | Windows x64 |
 | 🎭 SNI Spoofing Plus | Windows x64 |
+| 🛡️ Psiphon Over | Windows x64 |
+| 🌐 DNSTT | Windows x64 |
+| 🌐 MasterDNS | Windows x64 |
+| 🌀 Auto connection | Windows x64 |
 
 ⚠️ Desync and SNI Spoofing Plus use WinDivert and request Windows Administrator approval when started. SNI Spoofing Plus applies to standard TLS over TCP; it does not support Reality, MASQUE, WARP WireGuard, or non-TLS profiles.
 
