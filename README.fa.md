@@ -7,6 +7,9 @@
 <p align="center">🛡️ کلاینت پراکسی دسکتاپ بر پایهٔ V2rayN، همراه با Cloudflare WARP، Desync و SNI Spoofing Plus</p>
 <p align="center">🚀 نسخهٔ منبع فعلی: <code>v7.25.6-PiN52</code></p>
 <p align="center"><a href="README.md">English</a> · <a href="README.fa.md">فارسی</a></p>
+![Android](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?logo=kotlin&logoColor=white)
+![Root](https://img.shields.io/badge/Root-Not%20Required-2EA44F)
 ![Desync](https://img.shields.io/badge/Desync-Native-0066CC)
 ![Psiphon](https://img.shields.io/badge/Psiphon-Supported-4177B6)
 ![Tor](https://img.shields.io/badge/Tor-Supported-7D4698)
