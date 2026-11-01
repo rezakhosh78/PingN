@@ -68,6 +68,10 @@ https://nowpayments.io/donation/pingplas
 | 🌐 WARP MASQUE/H2 | Windows x64 و ARM64 |
 | 🌀 Desync | Windows x64 |
 | 🎭 SNI Spoofing Plus | Windows x64 |
+| 🛡️ Psiphon Over | Windows x64 |
+| 🌐 DNSTT | Windows x64 |
+| 🌐 MasterDNS | Windows x64 |
+| 🌀 Auto connection | Windows x64 |
 
 ⚠️ قابلیت‌های Desync و SNI Spoofing Plus از WinDivert استفاده می‌کنند و هنگام اجرا درخواست تأیید Administrator ویندوز می‌دهند. SNI Spoofing Plus برای TLS معمولی روی TCP است و از Reality، MASQUE، WARP WireGuard یا پروفایل‌های بدون TLS پشتیبانی نمی‌کند.
 
