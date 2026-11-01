@@ -4,65 +4,74 @@
 
 <h1 align="center">PingN</h1>
 
-<p align="center">کلاینت پروکسی دسکتاپ بر پایهٔ V2rayN، همراه با قابلیت‌های WARP، Desync و SNI</p>
+<p align="center">🛡️ کلاینت پراکسی دسکتاپ بر پایهٔ V2rayN، همراه با Cloudflare WARP، Desync و SNI Spoofing Plus</p>
+<p align="center">🚀 نسخهٔ منبع فعلی: <code>v7.25.6-PiN52</code></p>
 <p align="center"><a href="README.md">English</a> · <a href="README.fa.md">فارسی</a></p>
 
 ---
 
-## دربارهٔ PingN
+## ✨ دربارهٔ PingN
 
-**PingN** یک کلاینت پروکسی دسکتاپ بر پایهٔ پروژهٔ متن‌باز **v2rayN** است. مدیریت پروفایل و اشتراک، مسیریابی، DNS، پروکسی سیستم و TUN را حفظ می‌کند و ابزارهای اختصاصی Cloudflare WARP و اتصال را به آن اضافه می‌کند.
+**PingN** یک کلاینت پراکسی دسکتاپ بر پایهٔ پروژهٔ متن‌باز **v2rayN** است. مدیریت پروفایل و اشتراک، مسیریابی، DNS، پروکسی سیستم و TUN را حفظ می‌کند و ابزارهای اختصاصی Cloudflare WARP و اتصال را به آن اضافه می‌کند.
 
-## حمایت
-TRON:
+🧩 در نخستین اجرا، PingN یک اشتراک با نام **WARP** می‌سازد و پروفایل‌های **WARP MASQUE/H2** و **WARP AmneziaWG** را در آن قرار می‌دهد. اطلاعات ثبت یا کلید ذخیره‌شدهٔ این دو قابلیت در اتصال‌های بعدی دوباره استفاده می‌شود؛ فشردن **Enter** روی پروفایل WARP انتخاب‌شده، اتصال یا قطع آن را تغییر می‌دهد.
+
+⚡ در حالت **Auto** ابتدا اتصال مستقیم امتحان می‌شود و پس از ۸ ثانیه، در صورت نیاز اتصال از مسیر **Proxy-1** دوباره تلاش می‌شود.
+
+## 💖 حمایت
+
+**TRON:**  
 TUnX9wBWzhD2AK9GqB9FJekKaxCvYJNh18
 
-Nowpayment:
+**Nowpayments:**  
 https://nowpayments.io/donation/pingplas
-## مقایسهٔ PingN و V2rayN
 
-ستون V2rayN به نسخهٔ پایهٔ دسکتاپی اشاره دارد که PingN از آن منشعب شده است؛ این جدول دربارهٔ قابلیت‌هایی که ممکن است در نسخه‌های جدیدتر V2rayN اضافه شده باشند ادعایی ندارد.
+## 📊 مقایسهٔ PingN و V2rayN
+
+ستون V2rayN به کد دسکتاپ بالادستی‌ای اشاره دارد که PingN از آن منشعب شده است؛ این جدول دربارهٔ قابلیت‌هایی که ممکن است در نسخه‌های جدیدتر V2rayN اضافه شده باشند ادعایی ندارد.
 
 | قابلیت | نسخهٔ پایهٔ V2rayN | PingN |
 | --- | --- | --- |
-| مدیریت پروفایل و اشتراک | دارد | از V2rayN به ارث رسیده |
-| مسیریابی، DNS، پروکسی سیستم و TUN | دارد | از V2rayN به ارث رسیده |
-| هسته‌های Xray و sing-box | پشتیبانی می‌شوند | پشتیبانی می‌شوند |
-| WARP AmneziaWG | یکپارچه‌سازی اختصاصی PingN در نسخهٔ پایه ندارد | یکپارچه‌سازی Oberon؛ اسکن اندپوینت IPv4 و IPv6 در حالت سریع یا گسترده و گزینهٔ اسکن خودکار برای هر پروفایل. حالت SOCKS5 محلی ترافیک TCP را عبور می‌دهد. |
-| WARP MASQUE/H2 | یکپارچه‌سازی اختصاصی PingN در نسخهٔ پایه ندارد | یکپارچه‌سازی usque، اسکن اندپوینت و گزینهٔ اسکن خودکار برای هر پروفایل. از پورت SOCKS5 محلی جداگانه استفاده می‌کند؛ پورت ترجیحی <code>20808</code> است و اگر اشغال باشد پورت آزاد دیگری انتخاب می‌شود، جدا از پورت اصلی <code>10808</code> در PingN. |
-| Desync | یکپارچه‌سازی اختصاصی PingN در نسخهٔ پایه ندارد | preset و تنظیمات سفارشی برای هر پروفایل، همراه با اسکن گزینه‌های پیشنهادی. |
-| SNI Spoofing Plus | یکپارچه‌سازی اختصاصی PingN در نسخهٔ پایه ندارد | تنظیم Fake SNI و uTLS برای هر پروفایل Xray با TLS معمولی روی TCP. |
+| مدیریت پروفایل و اشتراک | ✅ | ✅ |
+| مسیریابی، DNS، پروکسی سیستم و TUN | ✅ | ✅ |
+| هسته‌های Xray و sing-box | ✅ | ✅ |
+| ساخت پروفایل‌های WARP | ❌ | ✅ |
+| WARP AmneziaWG | ❌ | ✅ |
+| WARP MASQUE/H2 | ❌ | ✅ |
+| اتصال خودکار | ❌ | ✅ |
+| Desync | ❌ | ✅ |
+| SNI Spoofing Plus | ❌ | ✅ |
 
-## سیستم‌عامل‌های پشتیبانی‌شده
+## 💻 سیستم‌عامل‌های پشتیبانی‌شده
 
 | سیستم‌عامل | معماری‌ها |
 | --- | --- |
-| Windows | x64، x86، ARM64 |
-| Linux | x64، ARM64، riscv64، loong64 |
-| macOS | x64، ARM64 |
+| 🪟 Windows | x64، x86، ARM64 |
+| 🐧 Linux | x64، ARM64، riscv64، loong64 |
+| 🍎 macOS | x64، ARM64 |
 
 قابلیت‌های افزوده‌شدهٔ PingN محدودیت پشتیبانی دارند:
 
-| قابلیت PingN | سیستم‌عامل‌های پشتیبانی‌شده |
+| 🔧 قابلیت PingN | سیستم‌عامل‌های پشتیبانی‌شده |
 | --- | --- |
-| WARP AmneziaWG | Windows x64 |
-| WARP MASQUE/H2 | Windows x64 و ARM64 |
-| Desync | Windows x64 |
-| SNI Spoofing Plus | Windows x64 |
+| 🛡️ WARP AmneziaWG | Windows x64 |
+| 🌐 WARP MASQUE/H2 | Windows x64 و ARM64 |
+| 🌀 Desync | Windows x64 |
+| 🎭 SNI Spoofing Plus | Windows x64 |
 
-قابلیت‌های Desync و SNI Spoofing Plus از WinDivert استفاده می‌کنند و هنگام اجرا درخواست تأیید Administrator ویندوز می‌دهند. SNI Spoofing Plus برای TLS معمولی روی TCP است و از Reality، MASQUE، WARP WireGuard یا پروفایل‌های بدون TLS پشتیبانی نمی‌کند.
+⚠️ قابلیت‌های Desync و SNI Spoofing Plus از WinDivert استفاده می‌کنند و هنگام اجرا درخواست تأیید Administrator ویندوز می‌دهند. SNI Spoofing Plus برای TLS معمولی روی TCP است و از Reality، MASQUE، WARP WireGuard یا پروفایل‌های بدون TLS پشتیبانی نمی‌کند.
 
-## دریافت برنامه
+## 📥 دریافت برنامه
 
 بستهٔ متناسب با سیستم‌عامل و معماری خود را از بخش **Releases** همین مخزن دریافت کنید. فایل‌های انتشار امضا می‌شوند و کلید عمومی و امضاهای جداگانهٔ GPG همراه انتشار قرار می‌گیرند.
 
-## مجوز
+## 📜 مجوز
 
 سورس اصلی PingN با مجوز [GPL-3.0](LICENSE) منتشر شده است. اجزای همراه مجوزها و اعلان‌های خودشان را دارند؛ پوشهٔ <code>third_party/licenses/</code> و اعلان کنار هر جزء را ببینید.
 
 PingN پروژه‌ای مستقل و مبتنی بر V2rayN است و نسخهٔ رسمی V2rayN نیست. PingNG پروژهٔ جداگانهٔ اندروید است.
 
-## پروژه‌های استفاده‌شده
+## 🧰 پروژه‌های استفاده‌شده
 
 | پروژه | کاربرد در PingN |
 | --- | --- |
@@ -78,4 +87,3 @@ PingN پروژه‌ای مستقل و مبتنی بر V2rayN است و نسخه�
 | [Avalonia UI](https://github.com/AvaloniaUI/Avalonia)، [Semi.Avalonia](https://github.com/irihitech/Semi.Avalonia) و [ReactiveUI](https://github.com/reactiveui/ReactiveUI) | چارچوب و اجزای رابط کاربری دسکتاپ چندسکویی. |
 | [Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat)، [2dust/sing-box-rules](https://github.com/2dust/sing-box-rules) و [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat) | قوانین مسیریابی و داده‌های GeoIP/geosite. |
 | [rezakhosh78/PingNG](https://github.com/rezakhosh78/PingNG) | مرجع رفتار WARP در نسخهٔ موبایل؛ سورس برنامهٔ PingNG در PingN کپی نشده است. |
-
