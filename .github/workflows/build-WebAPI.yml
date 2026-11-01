@@ -121,9 +121,9 @@ jobs:
           fi
           if [[ "$base_sha" =~ ^0+$ ]]; then
             empty_tree="$(git hash-object -t tree -w /dev/null)"
-            git diff --check "$empty_tree" HEAD
+            git -c core.whitespace=blank-at-eof,space-before-tab,cr-at-eol diff --check "$empty_tree" HEAD
           else
-            git diff --check "$base_sha...HEAD"
+            git -c core.whitespace=blank-at-eof,space-before-tab,cr-at-eol diff --check "$base_sha...HEAD"
           fi
 
   windows:
@@ -882,7 +882,7 @@ jobs:
           context: .
           file: ./PingN/PingN.WebAPI/Containerfile
           platforms: ${{ matrix.platform }}
-          tags: PingN-webapi:ci
+          tags: pingn-webapi:ci
           build-args: |
             RID=${{ matrix.rid }}
             WEB_VERSION=${{ needs.identity.outputs.version }}
