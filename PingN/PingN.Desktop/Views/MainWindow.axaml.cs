@@ -44,6 +44,8 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
             this.BindCommand(ViewModel, vm => vm.AddHysteria2ServerCmd, v => v.menuAddHysteria2Server).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.AddTuicServerCmd, v => v.menuAddTuicServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.AddWireguardServerCmd, v => v.menuAddWireguardServer).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.AddMasterDnsServerCmd, v => v.menuAddMasterDnsServer).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.AddDnsttSshServerCmd, v => v.menuAddDnsttSshServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.AddWarpAmneziaWgServerCmd, v => v.menuAddWarpAmneziaWgServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.AddAnytlsServerCmd, v => v.menuAddAnytlsServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.AddNaiveServerCmd, v => v.menuAddNaiveServer).DisposeWith(disposables);

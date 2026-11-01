@@ -28,7 +28,7 @@ public static class OberonRuntimeManager
     private static ProcessService? _processService;
     private static string? _activeConfigPath;
 
-    public static async Task<ProfileItem> CreateProfileAsync(string subId, CancellationToken cancellationToken = default)
+    public static async Task<ProfileItem> CreateProfileAsync(string subId, CancellationToken cancellationToken = default, string? registrationProxyUrl = null)
     {
         EnsureSupportedPlatform();
         var executablePath = ResolveExecutablePath();
@@ -51,6 +51,7 @@ public static class OberonRuntimeManager
             startInfo.ArgumentList.Add("-out");
             startInfo.ArgumentList.Add(temporaryConfigPath);
 
+            WarpRegistrationProxySession.ApplyEnvironment(startInfo, registrationProxyUrl);
             using var process = Process.Start(startInfo)
                 ?? throw new InvalidOperationException("Oberon could not be started.");
             var stdoutTask = process.StandardOutput.ReadToEndAsync();
@@ -99,6 +100,74 @@ public static class OberonRuntimeManager
         {
             try { File.Delete(temporaryConfigPath); } catch { }
         }
+    }
+
+    // A built-in profile is visible immediately, even when first launch is offline.
+    public static ProfileItem CreatePendingProfile(string subId)
+    {
+        var item = new ProfileItem
+        {
+            ConfigType = EConfigType.SOCKS, CoreType = ECoreType.Xray,
+            IsSub = false, Subid = subId, Remarks = "WARP AmneziaWG",
+            Address = Global.Loopback, Port = GetAvailablePort(), Network = string.Empty,
+        };
+        item.SetProtocolExtra(new ProtocolExtraItem
+        {
+            WarpProfileType = WarpProfileType,
+            WarpAmneziaRegistrationPending = true,
+            WarpAmneziaAutoScan = true,
+        });
+        return item;
+    }
+
+    private static readonly SemaphoreSlim RegistrationLock = new(1, 1);
+
+    public static async Task<ProtocolExtraItem> EnsureRegisteredAsync(ProfileItem profile, CancellationToken cancellationToken = default)
+    {
+        await RegistrationLock.WaitAsync(cancellationToken);
+        try
+        {
+            // Re-read after waiting; a background registration may have completed.
+            var stored = await AppManager.Instance.GetProfileItem(profile.IndexId);
+            if (stored is null)
+                throw new InvalidOperationException("The WARP profile was removed during registration.");
+            var extra = stored.GetProtocolExtra();
+            if (!string.IsNullOrWhiteSpace(extra.WarpAmneziaConfig))
+            {
+                ValidateProfileConfig(extra.WarpAmneziaConfig);
+                if (extra.WarpAmneziaRegistrationPending)
+                {
+                    extra = extra with { WarpAmneziaRegistrationPending = false };
+                    stored.SetProtocolExtra(extra);
+                    if (await ConfigHandler.AddSocksServer(AppManager.Instance.Config, stored) != 0)
+                        throw new IOException("Could not save the existing WARP AmneziaWG key.");
+                    BuiltinWarpManager.RegistrationUpdated.Publish();
+                }
+                profile.SetProtocolExtra(extra);
+                return extra;
+            }
+            var generated = await WarpRegistrationCoordinator.RunAsync(extra.WarpRegistrationProxyId,
+                (url, token) => CreateProfileAsync(stored.Subid, token, url), cancellationToken);
+            // Preserve edits made while Oberon was registering the device.
+            stored = await AppManager.Instance.GetProfileItem(profile.IndexId)
+                ?? throw new InvalidOperationException("The WARP profile was removed during registration.");
+            extra = stored.GetProtocolExtra();
+            if (string.IsNullOrWhiteSpace(extra.WarpAmneziaConfig))
+            {
+                extra = extra with
+                {
+                    WarpAmneziaConfig = generated.GetProtocolExtra().WarpAmneziaConfig,
+                    WarpAmneziaRegistrationPending = false,
+                };
+                stored.SetProtocolExtra(extra);
+                if (await ConfigHandler.AddSocksServer(AppManager.Instance.Config, stored) != 0)
+                    throw new IOException("Could not save the registered WARP profile.");
+                BuiltinWarpManager.RegistrationUpdated.Publish();
+            }
+            profile.SetProtocolExtra(extra);
+            return extra;
+        }
+        finally { RegistrationLock.Release(); }
     }
 
     public static void ValidateProfileConfig(string profileConfig)
@@ -225,7 +294,7 @@ public static class OberonRuntimeManager
         return updatedConfig;
     }
 
-    public static async Task<OberonLaunchPlan?> PrepareAsync(ProfileItem profile)
+    public static async Task<OberonLaunchPlan?> PrepareAsync(ProfileItem profile, CancellationToken cancellationToken = default)
     {
         var extra = profile.GetProtocolExtra();
         if (!string.Equals(extra.WarpProfileType, WarpProfileType, StringComparison.OrdinalIgnoreCase))
@@ -238,6 +307,8 @@ public static class OberonRuntimeManager
         {
             throw new InvalidOperationException("WARP AmneziaWG must use the saved local SOCKS5 address and port.");
         }
+        if (string.IsNullOrWhiteSpace(extra.WarpAmneziaConfig))
+            extra = await EnsureRegisteredAsync(profile, cancellationToken);
         if (string.IsNullOrWhiteSpace(extra.WarpAmneziaConfig))
             throw new InvalidOperationException("The saved Oberon AmneziaWG profile is missing. Add the WARP AmneziaWG profile again.");
 
@@ -253,7 +324,7 @@ public static class OberonRuntimeManager
             extra.WarpAmneziaAutoScan != false);
     }
 
-    public static async Task StartAsync(OberonLaunchPlan? plan, Func<bool, string, Task>? updateFunc)
+    public static async Task StartAsync(OberonLaunchPlan? plan, Func<bool, string, Task>? updateFunc, CancellationToken cancellationToken = default)
     {
         if (plan is null)
             return;
@@ -286,8 +357,10 @@ public static class OberonRuntimeManager
                 updateFunc: updateFunc);
 
             _processService = processService;
+            cancellationToken.ThrowIfCancellationRequested();
             await processService.StartAsync();
-            await WaitForSocksReady(processService, plan.SocksPort, plan.ScanMode, plan.AutoScan);
+            using var registration = cancellationToken.Register(() => { _ = processService.StopAsync(); });
+            await WaitForSocksReady(processService, plan.SocksPort, plan.ScanMode, plan.AutoScan).WaitAsync(cancellationToken);
         }
         catch
         {

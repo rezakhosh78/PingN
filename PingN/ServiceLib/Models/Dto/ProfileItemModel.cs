@@ -3,6 +3,7 @@ namespace ServiceLib.Models.Dto;
 [Serializable]
 public partial class ProfileItemModel : ReactiveObject
 {
+    public PsiphonConnectionState Psiphon { get; set; } = new();
     public bool IsActive { get; set; }
     public string IndexId { get; set; }
     public EConfigType ConfigType { get; set; }
@@ -11,7 +12,10 @@ public partial class ProfileItemModel : ReactiveObject
     public string? ProtoExtra { get; set; }
     public bool DesyncEnabled { get; set; }
     public bool SniSpoofingEnabled { get; set; }
+    public string Mode => string.Join(" · ", new[] { DesyncEnabled ? "Desync" : null, SniSpoofingEnabled ? "SNI Spoofing" : null }.Where(value => value is not null));
     public string Address { get; set; }
+    public string AddressDisplay { get; set; }
+    public string RemarksDisplay => IsActive ? $"{Remarks} [{ResUI.TipActiveServer}]" : Remarks;
     public int Port { get; set; }
     public string Network { get; set; }
     public string StreamSecurity { get; set; }

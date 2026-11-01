@@ -2,6 +2,11 @@ namespace ServiceLib.Models.Entities;
 
 public record ProtocolExtraItem
 {
+    public string? WarpRegistrationProxyId { get; init; }
+
+    public DnsTunnelSettings? DnsTunnel { get; init; }
+    public bool PsiphonOver { get; init; }
+    public string? PsiphonEgressRegion { get; init; }
     public bool? Uot { get; init; }
     public string? CongestionControl { get; init; }
 
@@ -36,6 +41,7 @@ public record ProtocolExtraItem
     // Oberon AmneziaWG profile text is stored with the profile so backup/restore
     // does not depend on an external config file.
     public string? WarpAmneziaConfig { get; init; }
+    public bool WarpAmneziaRegistrationPending { get; init; }
     public string? WarpAmneziaScanFamily { get; init; }
     public string? WarpAmneziaScanMode { get; init; }
     public bool? WarpAmneziaAutoScan { get; init; }

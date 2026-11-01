@@ -54,7 +54,9 @@
                         <MenuItem x:Name="menuAddTrojanServer" Header="{x:Static resx:ResUI.menuAddTrojanServer}" />
                         <MenuItem x:Name="menuAddHysteria2Server" Header="{x:Static resx:ResUI.menuAddHysteria2Server}" />
                         <MenuItem x:Name="menuAddWireguardServer" Header="{x:Static resx:ResUI.menuAddWireguardServer}" />
-                        <MenuItem x:Name="menuAddWarpAmneziaWgServer" Header="Add [WARP AmneziaWG]" IsVisible="{Binding BlOberonSupported}" />
+                        <MenuItem x:Name="menuAddMasterDnsServer" Header="Add [MasterDNS]" />
+                                <MenuItem x:Name="menuAddDnsttSshServer" Header="Add [DNSTT SSH]" />
+                                <MenuItem x:Name="menuAddWarpAmneziaWgServer" Header="Add [WARP AmneziaWG]" IsVisible="{Binding BlOberonSupported}" />
                         <MenuItem x:Name="menuAddMasqueServer" Header="{x:Static resx:ResUI.menuAddMasqueServer}" />
                         <MenuItem x:Name="menuAddSocksServer" Header="{x:Static resx:ResUI.menuAddSocksServer}" />
                         <MenuItem x:Name="menuAddHttpServer" Header="{x:Static resx:ResUI.menuAddHttpServer}" />

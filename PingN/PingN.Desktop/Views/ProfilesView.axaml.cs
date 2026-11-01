@@ -53,6 +53,8 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
             this.BindCommand(ViewModel, vm => vm.RemoveServerCmd, v => v.menuRemoveServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.RemoveDuplicateServerCmd, v => v.menuRemoveDuplicateServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.CopyServerCmd, v => v.menuCopyServer).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.ConnectSelectedCmd, v => v.menuConnectSelected).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.DisconnectSelectedCmd, v => v.menuDisconnectSelected).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.SetDefaultServerCmd, v => v.menuSetDefaultServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.ShareServerCmd, v => v.menuShareServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.GenGroupAllServerCmd, v => v.menuGenGroupAllServer).DisposeWith(disposables);
@@ -75,6 +77,12 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
             this.BindCommand(ViewModel, vm => vm.SpeedServerCmd, v => v.menuSpeedServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.SortServerResultCmd, v => v.menuSortServerResult).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.RemoveInvalidServerResultCmd, v => v.menuRemoveInvalidServerResult).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.ToggleConnectionCmd, v => v.btnToggleConnection).DisposeWith(disposables);
+            this.WhenAnyValue(v => v.ViewModel.ConnectionActive).Subscribe(active =>
+            {
+                ToolTip.SetTip(btnToggleConnection, active ? "Disconnect" : "Connect");
+                iconToggleConnection.Foreground = active ? Brushes.OrangeRed : Brushes.SeaGreen;
+            }).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.FastRealPingCmd, v => v.btnFastRealPing).DisposeWith(disposables);
 
             //servers export
@@ -281,10 +289,6 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
         {
             switch (e.Key)
             {
-                case Key.Enter:
-                    //case Key.Return:
-                    ViewModel?.SetDefaultServer();
-                    break;
 
                 case Key.Delete:
                 case Key.Back:
@@ -368,7 +372,7 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
     {
         try
         {
-            var lvColumnItem = _config.UiItem.MainColumnItem.OrderBy(t => t.Index).ToList();
+            var lvColumnItem = _config.UiItem.MainColumnItem.OrderBy(t => t.Name == "DelayVal" ? 0 : 1).ThenBy(t => t.Index).ToList();
             var displayIndex = 0;
             foreach (var item in lvColumnItem)
             {
@@ -400,6 +404,21 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
                     }
                 }
             }
+            var remarks = lstProfiles.Columns.FirstOrDefault(c => c.Tag?.ToString() == "Remarks");
+            var psiphon = lstProfiles.Columns.FirstOrDefault(c => c.Tag?.ToString() == "Psiphon");
+            var mode = lstProfiles.Columns.FirstOrDefault(c => c.Tag?.ToString() == "Mode");
+            if (remarks is not null && psiphon is not null)
+            {
+                psiphon.IsVisible = true;
+                psiphon.DisplayIndex = remarks.DisplayIndex + 1;
+                if (mode is not null)
+                {
+                    mode.IsVisible = true;
+                    mode.DisplayIndex = psiphon.DisplayIndex + 1;
+                }
+            }
+            var delay = lstProfiles.Columns.FirstOrDefault(c => c.Tag?.ToString() == "DelayVal");
+            if (delay is not null) delay.DisplayIndex = 0;
         }
         catch (Exception ex)
         {
@@ -445,6 +464,11 @@ public partial class ProfilesView : ReactiveUserControl<ProfilesViewModel>
     private void LstProfiles_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         var properties = e.GetCurrentPoint(this).Properties;
+        if (properties.IsRightButtonPressed && e.Source is Visual source)
+        {
+            var row = source.FindAncestorOfType<DataGridRow>(true);
+            if (row?.DataContext is ProfileItemModel profile) lstProfiles.SelectedItem = profile;
+        }
         if (properties.IsLeftButtonPressed)
         {
             _dragStartPoint = (e.GetPosition(this), e);

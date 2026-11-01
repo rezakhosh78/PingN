@@ -441,7 +441,8 @@ public static class ConfigHandler
             return await SetDefaultServerIndex(config, lstProfile.FirstOrDefault(t => t.Port > 0)?.IndexId);
         }
 
-        var item = await SQLiteHelper.Instance.TableAsync<ProfileItem>().FirstOrDefaultAsync(t => t.Port > 0);
+        var item = await SQLiteHelper.Instance.TableAsync<ProfileItem>()
+            .FirstOrDefaultAsync(t => t.Port > 0 && t.IndexId != WarpRegistrationCoordinator.Proxy1Id);
         return await SetDefaultServerIndex(config, item?.IndexId);
     }
 

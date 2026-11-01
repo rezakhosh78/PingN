@@ -33,6 +33,7 @@
 		<Resource Include="Resources\NotifyIcon3.ico" />
 		<Resource Include="Resources\NotifyIcon4.ico" />
 		<Resource Include="Resources\PingN.ico" />
+		<Resource Include="Resources\PingNProxy.ico" />
 	</ItemGroup>
 
 	<ItemGroup>

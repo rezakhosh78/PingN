@@ -4,17 +4,14 @@ namespace PingN.Desktop.Views;
 
 public partial class MsgView : ReactiveUserControl<MsgViewModel>
 {
-    private readonly Dictionary<string, StringBuilder> _categoryLogs = new()
-    {
-        ["All"] = new(), ["Xray"] = new(), ["Desync"] = new(), ["SNI Spoofing Plus"] = new(),
-    };
+    private readonly Dictionary<string, StringBuilder> _categoryLogs = RuntimeLogCategories.Names.ToDictionary(x => x, _ => new StringBuilder());
     private string _selectedCategory = "All";
     //private const int KeepLines = 30;
 
     public MsgView()
     {
         InitializeComponent();
-        cmbLogCategory.ItemsSource = new[] { "All", "Xray", "Desync", "SNI Spoofing Plus" };
+        cmbLogCategory.ItemsSource = RuntimeLogCategories.Names;
         cmbLogCategory.SelectedIndex = 0;
         txtMsg.TextArea.TextView.Options.EnableHyperlinks = false;
 

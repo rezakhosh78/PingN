@@ -74,15 +74,17 @@
                     Style="{StaticResource ToolbarTextBlock}"
                     Text="{x:Static resx:ResUI.TbRemarks}" />
 
-                <TextBox
+                <StackPanel Grid.Row="1" Grid.Column="1">
+<TextBox
                     x:Name="txtRemarks"
-                    Grid.Row="1"
-                    Grid.Column="1"
+                    
+                    
                     Width="400"
                     Margin="{StaticResource Margin4}"
                     VerticalAlignment="Center"
                     AcceptsReturn="True"
                     Style="{StaticResource MyOutlinedTextBox}" />
+</StackPanel>
 
                 <TextBlock
                     Grid.Row="2"
@@ -255,6 +257,17 @@
                         Text="{x:Static resx:ResUI.TbCustomOutboundTip}"
                         TextWrapping="Wrap" />
                 </Grid>
+
+<GroupBox x:Name="grpPsiphon" Header="Psiphon Over" Grid.Row="7">
+    <Grid Margin="{StaticResource Margin4}">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="230" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <TextBlock Grid.Row="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Enable Psiphon Over" />
+        <ToggleButton x:Name="togPsiphonOver" Grid.Row="0" Grid.Column="1" Margin="{StaticResource Margin4}" Style="{StaticResource PsiphonSliderToggleStyle}" />
+        <TextBlock Grid.Row="1" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Connection country" />
+        <ComboBox x:Name="cmbPsiphonRegion" Grid.Row="1" Grid.Column="1" Margin="{StaticResource Margin4}" DisplayMemberPath="Name" IsEnabled="{Binding PsiphonOver}" />
+    </Grid>
+</GroupBox>
             </Grid>
         </ScrollViewer>
     </DockPanel>

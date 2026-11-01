@@ -343,4 +343,39 @@ for variant in \
   fi
 done
 
+# A missing optional RISC-V build must not prevent the remaining release.
+cp -a "$temporary/dist" "$temporary/without-riscv"
+rm "$temporary/without-riscv/$full_riscv64" "$temporary/without-riscv/$update_riscv64"
+python3 "$web_root/Scripts/web-update-manifest.py" write \
+  --version 7.25.3 --repository 2dust/v2rayN --commit 0123456789abcdef \
+  --build-date 2026-09-28T00:00:00Z --dist "$temporary/without-riscv" \
+  --output "$temporary/without-riscv/WebAPI-update.json"
+python3 "$web_root/Scripts/web-update-manifest.py" verify \
+  --manifest "$temporary/without-riscv/WebAPI-update.json" --dist "$temporary/without-riscv" \
+  --repository 2dust/v2rayN
+python3 - "$temporary/without-riscv/WebAPI-update.json" <<'PY'
+import json, sys
+packages = json.load(open(sys.argv[1]))['packages']
+assert len(packages) == 5
+assert 'linux-riscv64' not in {p['rid'] for p in packages}
+PY
+# Partial optional uploads must not be advertised or silently accepted.
+cp "$temporary/dist/$full_riscv64" "$temporary/without-riscv/"
+if python3 "$web_root/Scripts/web-update-manifest.py" write \
+  --version 7.25.3 --repository 2dust/v2rayN --commit 0123456789abcdef \
+  --build-date 2026-09-28T00:00:00Z --dist "$temporary/without-riscv" \
+  --output "$temporary/without-riscv/WebAPI-update.json" 2>"$temporary/partial-riscv.log"; then
+  echo 'Expected an incomplete RISC-V pair to be rejected' >&2
+  exit 1
+fi
+# Required packages remain mandatory even when RISC-V is absent.
+rm "$temporary/without-riscv/$full_riscv64" "$temporary/without-riscv/$full_x64"
+if python3 "$web_root/Scripts/web-update-manifest.py" write \
+  --version 7.25.3 --repository 2dust/v2rayN --commit 0123456789abcdef \
+  --build-date 2026-09-28T00:00:00Z --dist "$temporary/without-riscv" \
+  --output "$temporary/without-riscv/WebAPI-update.json" 2>"$temporary/missing-required.log"; then
+  echo 'Expected a missing mandatory Linux x64 package to be rejected' >&2
+  exit 1
+fi
+
 printf 'Release packaging dry-run passed\n'

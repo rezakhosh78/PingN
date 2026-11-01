@@ -20,6 +20,7 @@
             DockPanel.Dock="Top"
             Orientation="Horizontal">
 
+            <ComboBox x:Name="cmbLogCategory" Width="175" Margin="{StaticResource MarginLeftRight8}" SelectionChanged="LogCategoryChanged" />
             <ComboBox
                 x:Name="cmbMsgFilter"
                 Width="200"

@@ -3,6 +3,11 @@ name: release all platforms
 on:
   workflow_dispatch:
     inputs:
+      enable_riscv64:
+        description: 'Opt in to the experimental RISC-V WebAPI build.'
+        required: false
+        type: boolean
+        default: false
       release_tag:
         description: Version or display tag (for example v7.25.6-PiN52; the GitHub tag is normalized to 7.25.6)
         required: true
@@ -87,6 +92,7 @@ jobs:
     uses: ./.github/workflows/release-WebAPI.yml
     with:
       release_tag: ${{ needs.create-release.outputs.release_tag }}
+      enable_riscv64: ${{ inputs.enable_riscv64 }}
     secrets: inherit
 
   dispatch-builds:

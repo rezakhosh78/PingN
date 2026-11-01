@@ -112,6 +112,8 @@
                                     x:Name="menuAddWireguardServer"
                                     Height="{StaticResource MenuItemHeight}"
                                     Header="{x:Static resx:ResUI.menuAddWireguardServer}" />
+                                <MenuItem x:Name="menuAddMasterDnsServer" Header="Add [MasterDNS]" />
+                                <MenuItem x:Name="menuAddDnsttSshServer" Header="Add [DNSTT SSH]" />
                                 <MenuItem
                                     x:Name="menuAddWarpAmneziaWgServer"
                                     Height="{StaticResource MenuItemHeight}"

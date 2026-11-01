@@ -14,6 +14,9 @@ public partial class AddServer2Window : WindowBase<AddServer2ViewModel>
 
         this.WhenActivated(disposables =>
         {
+            this.Bind(ViewModel, vm => vm.PsiphonOver, v => v.togPsiphonOver.IsChecked).DisposeWith(disposables);
+            this.OneWayBind(ViewModel, vm => vm.PsiphonRegions, v => v.cmbPsiphonRegion.ItemsSource).DisposeWith(disposables);
+            this.Bind(ViewModel, vm => vm.SelectedPsiphonRegion, v => v.cmbPsiphonRegion.SelectedItem).DisposeWith(disposables);
             this.WhenAnyValue(v => v.ViewModel.SelectedSource)
                 .KeepNotNull()
                 .Subscribe(InitializeData)

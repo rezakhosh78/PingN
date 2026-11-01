@@ -17,6 +17,9 @@ public partial class MainWindowViewModel : MyReactiveObject
     public BackupAndRestoreViewModel BackupAndRestoreViewModel { get; } = new();
     public StatusBarViewModel StatusBarViewModel { get; } = StatusBarViewModel.Instance;
 
+    private volatile bool _connectionStopped;
+    private CancellationTokenSource? _connectionLifetime;
+
     #region Menu
 
     //servers
@@ -31,6 +34,8 @@ public partial class MainWindowViewModel : MyReactiveObject
     public ReactiveCommand<RxVoid, RxVoid> AddTuicServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> AddWireguardServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> AddWarpAmneziaWgServerCmd { get; }
+    public ReactiveCommand<RxVoid, RxVoid> AddMasterDnsServerCmd { get; }
+    public ReactiveCommand<RxVoid, RxVoid> AddDnsttSshServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> AddAnytlsServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> AddNaiveServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> AddMasqueServerCmd { get; }
@@ -139,6 +144,8 @@ public partial class MainWindowViewModel : MyReactiveObject
         {
             await AddServerAsync(EConfigType.WireGuard);
         });
+        AddMasterDnsServerCmd = ReactiveCommand.CreateFromTask(() => AddDnsTunnelAsync("masterdns"));
+        AddDnsttSshServerCmd = ReactiveCommand.CreateFromTask(() => AddDnsTunnelAsync("dnstt-ssh"));
         AddWarpAmneziaWgServerCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await AddWarpAmneziaWgServerAsync();
@@ -285,6 +292,19 @@ public partial class MainWindowViewModel : MyReactiveObject
             .AsObservable()
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .SubscribeAsync(async _ => await RefreshServersDispatcherAsync());
+        BuiltinWarpManager.RegistrationUpdated
+            .AsObservable()
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
+            .SubscribeAsync(async _ => await RefreshServersDispatcherAsync());
+
+        ProfilesViewModel.ConnectHandler = async () => { _connectionStopped = false; await Reload(); };
+        ProfilesViewModel.DisconnectHandler = DisconnectSelectedAsync;
+        ProfilesViewModel.ConnectRequested.AsObservable()
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
+            .SubscribeAsync(async _ => { _connectionStopped = false; await Reload(); });
+        ProfilesViewModel.DisconnectRequested.AsObservable()
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
+            .SubscribeAsync(async _ => await DisconnectSelectedAsync());
 
         var vmReloadRequestedList = new List<IObservable<RxVoid>>
         {
@@ -344,6 +364,9 @@ public partial class MainWindowViewModel : MyReactiveObject
         await ConfigHandler.InitBuiltinDNS(_config);
         await ConfigHandler.InitBuiltinFullConfigTemplate(_config);
         await ProfileExManager.Instance.Init();
+        await BuiltinWarpManager.InitializeAsync(_config);
+        // Show saved WARP endpoints before core setup and network checks finish.
+        await ProfilesViewModel.RefreshServersBiz();
         await CoreManager.Instance.Init(_config, UpdateHandler);
         await CertPemManager.Instance.Init(_config);
         TaskManager.Instance.RegUpdateTask(_config, UpdateTaskHandler);
@@ -354,6 +377,9 @@ public partial class MainWindowViewModel : MyReactiveObject
         }
         await RefreshServersDispatcherAsync();
 
+        // Registration can finish while another profile connects; its saved endpoint
+        // is pushed into Address as soon as it is available.
+        _ = BuiltinWarpManager.RegisterPendingAsync(_config);
         await Reload();
     }
 
@@ -494,6 +520,13 @@ public partial class MainWindowViewModel : MyReactiveObject
                 await Reload();
             }
         }
+    }
+
+    private async Task AddDnsTunnelAsync(string kind)
+    {
+        var item = DnsTunnelRuntimeManager.CreateProfile(kind, _config.SubIndexId);
+        if (await AppManager.Instance.WindowDialog.ShowDialogAsync(new AddServerViewModel(item)) == true)
+            await RefreshServersDispatcherAsync();
     }
 
     private async Task AddWarpAmneziaWgServerAsync()
@@ -715,8 +748,31 @@ public partial class MainWindowViewModel : MyReactiveObject
     private bool _hasNextReloadJob = false;
     private readonly SemaphoreSlim _reloadSemaphore = new(1, 1);
 
+    private async Task DisconnectSelectedAsync()
+    {
+        _connectionStopped = true;
+        ProfilesViewModel.ConnectionActive = false;
+        _hasNextReloadJob = false;
+        _connectionLifetime?.Cancel();
+        CoreManager.Instance.CancelPendingDnsStart();
+        await SysProxyHandler.UpdateSysProxy(_config, true);
+        await CoreManager.Instance.CoreStop();
+        var shutdownSucceeded = CoreManager.Instance.LastStopSucceeded;
+        await _reloadSemaphore.WaitAsync();
+        try
+        {
+            await CoreManager.Instance.CoreStop();
+            await SysProxyHandler.UpdateSysProxy(_config, true);
+            NoticeManager.Instance.SendMessage(shutdownSucceeded && CoreManager.Instance.LastStopSucceeded
+                ? "Disconnected: owned core processes, DNS/WARP listeners and system proxy stopped."
+                : "Disconnect completed with shutdown errors; see the log for the component that could not stop.");
+        }
+        finally { _reloadSemaphore.Release(); }
+    }
+
     public async Task Reload()
     {
+        if (_connectionStopped) return;
         //If there are unfinished reload job, marked with next job.
         if (!await _reloadSemaphore.WaitAsync(0))
         {
@@ -733,6 +789,10 @@ public partial class MainWindowViewModel : MyReactiveObject
         try
         {
             SetReloadEnabled(false);
+            _connectionLifetime?.Dispose();
+            _connectionLifetime = new CancellationTokenSource();
+            var connectionToken = _connectionLifetime.Token;
+            ProfilesViewModel.ConnectionActive = true;
 
             RxSchedulers.MainThreadScheduler.Schedule(() =>
             {
@@ -755,8 +815,9 @@ public partial class MainWindowViewModel : MyReactiveObject
 
             await Task.Run(async () =>
             {
-                await LoadCore(allResult.MainResult.Context, allResult.PreSocksResult?.Context);
-                await SysProxyHandler.UpdateSysProxy(_config, false);
+                if (_connectionStopped) return;
+                await CoreManager.Instance.LoadCore(allResult.MainResult.Context, allResult.PreSocksResult?.Context, connectionToken);
+                await SysProxyHandler.UpdateSysProxy(_config, _connectionStopped);
                 await Task.Delay(1000);
             });
             RxSchedulers.MainThreadScheduler.Schedule(async () =>
@@ -792,8 +853,13 @@ public partial class MainWindowViewModel : MyReactiveObject
 
             ReloadResult(showClashUI);
         }
+        catch (OperationCanceledException) when (_connectionStopped)
+        {
+            await CoreManager.Instance.CoreStop();
+        }
         finally
         {
+            ProfilesViewModel.ConnectionActive = !_connectionStopped && CoreManager.Instance.IsCoreRunning;
             SetReloadEnabled(true);
             _reloadSemaphore.Release();
             //If there is a next reload job, execute it.

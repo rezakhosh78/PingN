@@ -11,6 +11,10 @@ public partial class ProfilesViewModel : MyReactiveObject
     public Interaction<RxVoid, RxVoid> AdjustMainLvColWidthInteraction { get; } = new();
 
     public EventChannel<RxVoid> ReloadRequested { get; } = new();
+    public EventChannel<RxVoid> ConnectRequested { get; } = new();
+    public EventChannel<RxVoid> DisconnectRequested { get; } = new();
+    public Func<Task>? ConnectHandler { get; set; }
+    public Func<Task>? DisconnectHandler { get; set; }
     public EventChannel<RxVoid> RefreshServersRequested { get; } = new();
 
     #region private prop
@@ -53,6 +57,12 @@ public partial class ProfilesViewModel : MyReactiveObject
     public ReactiveCommand<RxVoid, RxVoid> RemoveDuplicateServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> CopyServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> SetDefaultServerCmd { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ConnectSelectedCmd { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ToggleConnectionCmd { get; }
+    public ReactiveCommand<RxVoid, RxVoid> ToggleSelectedConnectionCmd { get; }
+    private string? _enterConnectingProfileId;
+    [Reactive] public partial bool ConnectionActive { get; set; }
+    public ReactiveCommand<RxVoid, RxVoid> DisconnectSelectedCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> ShareServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> GenGroupAllServerCmd { get; }
     public ReactiveCommand<RxVoid, RxVoid> GenGroupRegionServerCmd { get; }
@@ -130,6 +140,62 @@ public partial class ProfilesViewModel : MyReactiveObject
         {
             await CopyServer();
         }, canEditRemove);
+        ConnectSelectedCmd = ReactiveCommand.CreateFromTask(async () =>
+        {
+            var id = SelectedProfile?.IndexId ?? _config.IndexId;
+            if (string.IsNullOrWhiteSpace(id)) { ConnectionActive = false; return; }
+            if (await ConfigHandler.SetDefaultServerIndex(_config, id) != 0) return;
+            await RefreshServers();
+            // Force a new connection even if this is already the selected profile.
+            if (ConnectHandler is not null) await ConnectHandler();
+            else ConnectRequested.Publish();
+        }, canEditRemove);
+        DisconnectSelectedCmd = ReactiveCommand.CreateFromTask(async () =>
+        {
+            if (DisconnectHandler is not null) await DisconnectHandler();
+            else
+            {
+                await CoreManager.Instance.CoreStop();
+                await SysProxyHandler.UpdateSysProxy(_config, true);
+                ConnectionActive = false;
+            }
+        });
+        ToggleConnectionCmd = ReactiveCommand.Create(() =>
+        {
+            var disconnect = ConnectionActive || CoreManager.Instance.IsCoreRunning;
+            if (!disconnect) ConnectionActive = true;
+            var command = disconnect ? DisconnectSelectedCmd : ConnectSelectedCmd;
+            // Keep the toolbar responsive while the separate connect command awaits
+            // network negotiation, so a second click can cancel that attempt.
+            command.Execute().Subscribe(_ => { }, error =>
+            {
+                Logging.SaveLog("Connection toolbar", error);
+                NoticeManager.Instance.SendMessage(error.Message);
+            });
+        });
+        ToggleSelectedConnectionCmd = ReactiveCommand.Create(() =>
+        {
+            var id = SelectedProfile?.IndexId;
+            if (string.IsNullOrWhiteSpace(id)) return;
+            var sameProfile = id == _config.IndexId || id == _enterConnectingProfileId;
+            var disconnect = sameProfile && (ConnectionActive || CoreManager.Instance.IsCoreRunning);
+            if (!disconnect)
+            {
+                _enterConnectingProfileId = id;
+                ConnectionActive = true;
+            }
+            var command = disconnect ? DisconnectSelectedCmd : ConnectSelectedCmd;
+            command.Execute().Subscribe(_ => { }, error =>
+            {
+                if (_enterConnectingProfileId == id) _enterConnectingProfileId = null;
+                if (!disconnect) ConnectionActive = false;
+                Logging.SaveLog("Profile Enter connection", error);
+                NoticeManager.Instance.SendMessage(error.Message);
+            }, () =>
+            {
+                if (_enterConnectingProfileId == id) _enterConnectingProfileId = null;
+            });
+        });
         SetDefaultServerCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await SetDefaultServer();
@@ -398,7 +464,9 @@ public partial class ProfilesViewModel : MyReactiveObject
     private async Task<List<ProfileItemModel>?> GetProfileItemsEx(string subid, string filter)
     {
         var lstModel = await AppManager.Instance.ProfileModels(_config.SubIndexId, filter);
-
+        // Internal registration helper remains available to the editor, never the main list.
+        lstModel = lstModel.Where(x => x.IndexId != WarpRegistrationCoordinator.Proxy1Id).ToList();
+        if (_config.IndexId == WarpRegistrationCoordinator.Proxy1Id) _config.IndexId = string.Empty;
         await ConfigHandler.SetDefaultServer(_config, lstModel);
 
         var lstServerStat = (_config.GuiItem.EnableStatistics ? StatisticsManager.Instance.ServerStat : null) ?? [];
@@ -418,12 +486,14 @@ public partial class ProfilesViewModel : MyReactiveObject
                         {
                             "amneziawg" => "WARP AmneziaWG",
                             "masque-h2" => "WARP MASQUE/H2",
-                            _ => t.ConfigType.ToString(),
+                            _ => featureExtra?.DnsTunnel?.Kind switch { "masterdns" => "MasterDNS", "dnstt-ssh" => "DNSTT SSH", _ => t.ConfigType.ToString() },
                         },
                         Remarks = t.Remarks,
+                        Psiphon = PsiphonRuntimeManager.GetState(t.IndexId),
                         DesyncEnabled = !string.IsNullOrWhiteSpace(desyncSettings?.Profile) && !desyncSettings.Profile.Equals("Off", StringComparison.OrdinalIgnoreCase),
                         SniSpoofingEnabled = featureExtra?.SniSpoofingPlusEnabled == true,
                         Address = t.Address,
+                        AddressDisplay = ProfileDisplayAddress.Resolve(t.Address, featureExtra),
                         Port = t.Port,
                         //Security = t.Security,
                         Network = t.Network,

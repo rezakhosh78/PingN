@@ -5,6 +5,14 @@ public partial class AddGroupServerViewModel : MyReactiveObject, ICloseable
     public event EventHandler? RequestClose;
 
     [Reactive]
+    public partial bool PsiphonOver { get; set; }
+
+    [Reactive]
+    public partial PsiphonRegionOption? SelectedPsiphonRegion { get; set; }
+
+    public IReadOnlyList<PsiphonRegionOption> PsiphonRegions => PsiphonRegionOption.All;
+
+    [Reactive]
     public partial ProfileItem SelectedSource { get; set; }
 
     [Reactive]
@@ -87,6 +95,8 @@ public partial class AddGroupServerViewModel : MyReactiveObject, ICloseable
     public async Task Init()
     {
         var protocolExtra = SelectedSource.GetProtocolExtra();
+        PsiphonOver = protocolExtra.PsiphonOver;
+        SelectedPsiphonRegion = PsiphonRegionOption.All.FirstOrDefault(item => item.Code == protocolExtra.PsiphonEgressRegion) ?? PsiphonRegionOption.All[0];
         PolicyGroupType = (protocolExtra?.MultipleLoad ?? EMultipleLoad.LeastPing) switch
         {
             EMultipleLoad.LeastPing => ResUI.TbLeastPing,
@@ -200,6 +210,8 @@ public partial class AddGroupServerViewModel : MyReactiveObject, ICloseable
     {
         return SelectedSource.GetProtocolExtra() with
         {
+            PsiphonOver = PsiphonOver,
+            PsiphonEgressRegion = SelectedPsiphonRegion?.Code,
             ChildItems =
             Utils.List2String(ChildItemsObs.Where(s => !s.IndexId.IsNullOrEmpty()).Select(s => s.IndexId).ToList()),
             MultipleLoad = PolicyGroupType switch

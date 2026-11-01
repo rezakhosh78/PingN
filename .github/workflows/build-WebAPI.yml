@@ -3,12 +3,22 @@ name: build PingN.WebAPI
 on:
   workflow_call:
     inputs:
+      enable_riscv64:
+        description: 'Opt in to the experimental Linux RISC-V API build (requires a RISC-V runner).'
+        required: false
+        type: boolean
+        default: false
       release_tag:
         required: false
         type: string
         default: ''
   workflow_dispatch:
     inputs:
+      enable_riscv64:
+        description: 'Opt in to the experimental Linux RISC-V API build (requires a RISC-V runner).'
+        required: false
+        type: boolean
+        default: false
       release_tag:
         description: 'Release tag (for example 7.x.y). Empty builds a development API package.'
         required: false
@@ -467,12 +477,14 @@ jobs:
           path: dist/*.zip
           if-no-files-found: error
 
-  # linux-riscv64 runs natively on the RISE RISC-V runners with the community
-  # xujiegb/dotnet-riscv SDK; single-file publish is verified to work there.
+  # Experimental community SDK / external runner: opt in explicitly.
+  # This architecture must not prevent publication of the supported packages.
   native-riscv64:
     name: Native API build (linux-riscv64)
     needs: identity
-    if: needs.identity.outputs.release == 'true'
+    if: needs.identity.outputs.release == 'true' && inputs.enable_riscv64
+    continue-on-error: true
+    timeout-minutes: 45
     runs-on: ubuntu-24.04-riscv
     container: debian:13
     env:
@@ -870,7 +882,7 @@ jobs:
           context: .
           file: ./PingN/PingN.WebAPI/Containerfile
           platforms: ${{ matrix.platform }}
-          tags: pingn-webapi:ci
+          tags: PingN-webapi:ci
           build-args: |
             RID=${{ matrix.rid }}
             WEB_VERSION=${{ needs.identity.outputs.version }}
@@ -881,7 +893,14 @@ jobs:
 
   release-assets:
     name: Assemble API release assets
-    if: needs.identity.outputs.release == 'true'
+    # An optional skipped/failed RISC-V build must not skip this job.
+    # Required builds still have to succeed; cancellation never publishes.
+    if: >-
+      ${{ !cancelled() && needs.identity.outputs.release == 'true'
+          && needs.identity.result == 'success' && needs.verify.result == 'success'
+          && needs.windows.result == 'success' && needs.windows-arm64.result == 'success'
+          && needs.native.result == 'success' && needs.native-loong64.result == 'success'
+          && needs.container.result == 'success' }}
     needs: [identity, verify, windows, windows-arm64, native, native-riscv64, native-loong64, container]
     runs-on: ubuntu-24.04
     steps:

@@ -4,7 +4,68 @@ namespace ServiceLib.ViewModels;
 
 public partial class AddServerViewModel : MyReactiveObject, ICloseable
 {
+    public ObservableCollection<WarpRegistrationProxyChoice> WarpRegistrationProxies { get; } = [new(WarpRegistrationCoordinator.Auto, "Auto"), new(WarpRegistrationCoordinator.Direct, "Direct")];
+    [Reactive] public partial WarpRegistrationProxyChoice? SelectedWarpRegistrationProxy { get; set; }
+    [Reactive] public partial string WarpKeyStatus { get; set; } = "";
+    [Reactive] public partial bool IsGeneratingWarpKey { get; set; }
+    public ReactiveCommand<RxVoid, RxVoid> GenerateWarpKeyCmd { get; }
+
+    private async Task LoadWarpRegistrationProxiesAsync()
+    {
+        try
+        {
+            await WarpRegistrationCoordinator.EnsureProxy1Async();
+            foreach (var profile in await AppManager.Instance.ProfileItems("") ?? [])
+                if (profile.IndexId != SelectedSource.IndexId && WarpRegistrationProxySession.IsSupported(profile))
+                    WarpRegistrationProxies.Add(new(profile.IndexId, profile.Remarks));
+            var id = SelectedSource.GetProtocolExtra().WarpRegistrationProxyId;
+            SelectedWarpRegistrationProxy = WarpRegistrationProxies.FirstOrDefault(x => x.Id == id) ?? WarpRegistrationProxies[0];
+        }
+        catch (Exception ex) { WarpKeyStatus = $"Cannot load proxy profiles: {ex.Message}"; }
+    }
+
+    private CancellationTokenSource? _warpKeyCancellation;
+    public void CancelWarpKeyGeneration() => _warpKeyCancellation?.Cancel();
+
+    private async Task GenerateWarpKeyAsync()
+    {
+        if (IsGeneratingWarpKey) return;
+        IsGeneratingWarpKey = true;
+        WarpKeyStatus = "Generating a new WARP key...";
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+            _warpKeyCancellation = timeout;
+            if (IsWarpAmneziaProfile)
+            {
+                var generated = await WarpRegistrationCoordinator.RunAsync(SelectedWarpRegistrationProxy?.Id,
+                    (url, token) => OberonRuntimeManager.CreateProfileAsync(SelectedSource.Subid, token, url), timeout.Token);
+                WarpAmneziaConfig = generated.GetProtocolExtra().WarpAmneziaConfig ?? "";
+                LoadWarpAmneziaEditorFields(WarpAmneziaConfig);
+            }
+            else if (IsWarpMasqueProfile)
+            {
+                var clone = JsonUtils.DeepCopy(SelectedSource);
+                clone.SetProtocolExtra(clone.GetProtocolExtra() with { WarpMasqueDeviceName = WarpMasqueDeviceName, WarpRegistrationProxyId = SelectedWarpRegistrationProxy?.Id });
+                var json = await WarpMasqueRuntimeManager.GenerateRegistrationAsync(clone, timeout.Token);
+                SelectedSource.SetProtocolExtra(SelectedSource.GetProtocolExtra() with { WarpMasqueConfigJson = json });
+            }
+            WarpKeyStatus = "New WARP credentials received. Temporary proxy stopped. Save to use them.";
+        }
+        catch (Exception ex) { WarpKeyStatus = $"WARP registration failed: {ex.Message}"; Logging.SaveLog("WARP registration failed", ex); }
+        finally { _warpKeyCancellation = null; IsGeneratingWarpKey = false; }
+    }
+
     public event EventHandler? RequestClose;
+    public DnsTunnelSettings? DnsTunnel { get; private set; }
+
+    [Reactive]
+    public partial bool PsiphonOver { get; set; }
+
+    [Reactive]
+    public partial PsiphonRegionOption? SelectedPsiphonRegion { get; set; }
+
+    public IReadOnlyList<PsiphonRegionOption> PsiphonRegions => PsiphonRegionOption.All;
 
     [Reactive]
     public partial ProfileItem SelectedSource { get; set; }
@@ -438,6 +499,7 @@ public partial class AddServerViewModel : MyReactiveObject, ICloseable
     public AddServerViewModel(ProfileItem profileItem)
     {
         _config = AppManager.Instance.Config;
+        GenerateWarpKeyCmd = ReactiveCommand.CreateFromTask(GenerateWarpKeyAsync, this.WhenAnyValue(x => x.IsGeneratingWarpKey).Select(x => !x));
 
         ScanWarpAmneziaEndpointCmd = ReactiveCommand.CreateFromTask(async () =>
         {
@@ -606,6 +668,9 @@ public partial class AddServerViewModel : MyReactiveObject, ICloseable
         CertSha = SelectedSource?.CertSha ?? string.Empty;
 
         var protocolExtra = SelectedSource?.GetProtocolExtra() ?? new();
+        SelectedWarpRegistrationProxy = WarpRegistrationProxies[0];
+        if (IsWarpAmneziaProfile || IsWarpMasqueProfile) _ = LoadWarpRegistrationProxiesAsync();
+        DnsTunnel = protocolExtra.DnsTunnel;
         var transport = SelectedSource?.GetTransportExtra() ?? new();
         WarpAmneziaConfig = protocolExtra.WarpAmneziaConfig ?? string.Empty;
         WarpAmneziaScanFamily = OberonRuntimeManager.NormalizeScanFamily(protocolExtra.WarpAmneziaScanFamily) == "ipv6" ? "IPv6" : "IPv4";
@@ -670,6 +735,8 @@ public partial class AddServerViewModel : MyReactiveObject, ICloseable
         DesyncAutoTtlMin = (desyncSettings?.AutoTtlMin ?? 3).ToString();
         DesyncAutoTtlMax = (desyncSettings?.AutoTtlMax ?? 20).ToString();
         DesyncFakeSni = desyncSettings?.FakeSni ?? string.Empty;
+        PsiphonOver = protocolExtra.PsiphonOver;
+        SelectedPsiphonRegion = PsiphonRegionOption.All.FirstOrDefault(item => item.Code == protocolExtra.PsiphonEgressRegion) ?? PsiphonRegionOption.All[0];
         SniSpoofingPlusEnabled = protocolExtra.SniSpoofingPlusEnabled == true;
         SniSpoofingPlusFakeSni = protocolExtra.SniSpoofingPlusFakeSni ?? PingNSniSpoofingSettings.DefaultFakeSni;
         var sniSettings = JsonUtils.Deserialize<PingNSniSpoofingSettings>(protocolExtra.PingNSniSpoofingJson) ?? new();
@@ -786,12 +853,25 @@ public partial class AddServerViewModel : MyReactiveObject, ICloseable
             NoticeManager.Instance.Enqueue(ResUI.FillServerAddress);
             return;
         }
+        if (DnsTunnel is not null)
+        {
+            try { DnsTunnel.Validate(SelectedSource.Port); }
+            catch (Exception ex) { NoticeManager.Instance.Enqueue(ex.Message); return; }
+        }
         if (IsWarpAmneziaProfile)
         {
             try
             {
-                WarpAmneziaConfig = BuildWarpAmneziaConfig();
-                OberonRuntimeManager.ValidateProfileConfig(WarpAmneziaConfig);
+                var pending = SelectedSource.GetProtocolExtra().WarpAmneziaRegistrationPending;
+                var hasKeyFields = !string.IsNullOrWhiteSpace(WarpAwgPrivateKey)
+                    || !string.IsNullOrWhiteSpace(WarpAwgPublicKey)
+                    || !string.IsNullOrWhiteSpace(WarpAwgEndpoint);
+                // Allow scan/label edits before the first online registration.
+                if (!pending || hasKeyFields)
+                {
+                    WarpAmneziaConfig = BuildWarpAmneziaConfig();
+                    OberonRuntimeManager.ValidateProfileConfig(WarpAmneziaConfig);
+                }
             }
             catch (Exception ex)
             {
@@ -938,6 +1018,8 @@ public partial class AddServerViewModel : MyReactiveObject, ICloseable
         }
         SelectedSource.SetProtocolExtra(SelectedSource.GetProtocolExtra() with
         {
+            WarpRegistrationProxyId = SelectedWarpRegistrationProxy?.Id.NullIfEmpty(),
+            DnsTunnel = DnsTunnel,
             Ports = Ports.NullIfEmpty(),
             AlterId = AlterId > 0 ? AlterId.ToString() : null,
             Flow = Flow.NullIfEmpty(),
@@ -955,6 +1037,8 @@ public partial class AddServerViewModel : MyReactiveObject, ICloseable
             WgReserved = WgReserved.NullIfEmpty(),
             WgMtu = WgMtu >= 576 ? WgMtu : null,
             WgDns = WgDns.NullIfEmpty(),
+            WarpAmneziaRegistrationPending = SelectedSource.GetProtocolExtra().WarpAmneziaRegistrationPending
+                && string.IsNullOrWhiteSpace(WarpAmneziaConfig),
             WarpAmneziaConfig = IsWarpAmneziaProfile
                 ? WarpAmneziaConfig
                 : SelectedSource.GetProtocolExtra().WarpAmneziaConfig,
@@ -988,6 +1072,8 @@ public partial class AddServerViewModel : MyReactiveObject, ICloseable
             MasqueHeaders = MasqueHeaders.NullIfEmpty(),
             WarpProfileType = SelectedSource.GetProtocolExtra().WarpProfileType,
             PingNDesyncJson = JsonSerializer.Serialize(desyncSettings),
+            PsiphonOver = PsiphonOver,
+            PsiphonEgressRegion = SelectedPsiphonRegion?.Code,
             SniSpoofingPlusEnabled = SniSpoofingPlusEnabled,
             PingNSniSpoofingJson = JsonSerializer.Serialize(sniOptions),
             SniSpoofingPlusFakeSni = normalizedFakeSni,

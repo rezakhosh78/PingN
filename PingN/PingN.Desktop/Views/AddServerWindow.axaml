@@ -5,11 +5,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dd="clr-namespace:PingN.Desktop.DesignData"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:ServiceLib.Models.Dto;assembly=ServiceLib"
     xmlns:resx="clr-namespace:ServiceLib.Resx;assembly=ServiceLib"
     xmlns:views="clr-namespace:PingN.Desktop.Views"
     xmlns:vms="clr-namespace:ServiceLib.ViewModels;assembly=ServiceLib"
     Title="{x:Static resx:ResUI.menuServers}"
     Width="900"
+    MinWidth="400"
     Height="600"
     x:DataType="vms:AddServerViewModel"
     Design.DataContext="{x:Static dd:DesignData.AddServer}"
@@ -34,16 +36,16 @@
                 Content="{x:Static resx:ResUI.TbCancel}"
                 IsCancel="True" />
         </StackPanel>
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer x:Name="serverEditorScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
 
                 <Grid
                     x:Name="gridBasic"
                     Grid.Row="0"
-                    ColumnDefinitions="300,Auto,Auto"
+                    ColumnDefinitions="160,*"
                     RowDefinitions="Auto,Auto,Auto,Auto">
 
-                    <TextBlock
+                    <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap"
                         x:Name="tbServerType"
                         Grid.Row="0"
                         Grid.Column="0"
@@ -51,29 +53,31 @@
                         Text="{x:Static resx:ResUI.menuServers}" />
                     <StackPanel
                         Grid.Row="0"
-                        Grid.Column="2"
-                        Orientation="Horizontal">
+                        Grid.Column="1"
+                        Orientation="Vertical">
                         <ComboBox
                             x:Name="cmbCoreType"
-                            Width="200"
+                           
                             Margin="{StaticResource Margin4}"
                             ToolTip.Tip="{x:Static resx:ResUI.TbCoreType}" />
                     </StackPanel>
 
-                    <TextBlock
+                    <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap"
                         Grid.Row="1"
                         Grid.Column="0"
                         Margin="{StaticResource Margin4}"
                         VerticalAlignment="Center"
                         Text="{x:Static resx:ResUI.TbRemarks}" />
-                    <TextBox
+                    <StackPanel Grid.Row="1" Grid.Column="1">
+<TextBox
                         x:Name="txtRemarks"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Width="400"
+                        
+                        
+                       
                         Margin="{StaticResource Margin4}" />
+</StackPanel>
 
-                    <TextBlock
+                    <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap"
                         x:Name="tbAddress"
                         Grid.Row="2"
                         Grid.Column="0"
@@ -84,10 +88,10 @@
                         x:Name="txtAddress"
                         Grid.Row="2"
                         Grid.Column="1"
-                        Width="400"
+                       
                         Margin="{StaticResource Margin4}" />
 
-                    <TextBlock
+                    <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap"
                         x:Name="tbPort"
                         Grid.Row="3"
                         Grid.Column="0"
@@ -98,9 +102,9 @@
                         x:Name="txtPort"
                         Grid.Row="3"
                         Grid.Column="1"
-                        Width="200"
+                       
                         Margin="{StaticResource Margin4}"
-                        HorizontalAlignment="Left" />
+                        HorizontalAlignment="Stretch" />
                 </Grid>
 
                 <Separator Grid.Row="1" Margin="{StaticResource MarginTb8}" />
@@ -288,73 +292,58 @@
                     x:Name="gridWarpAmnezia"
                     Grid.Row="2"
                     IsVisible="False"
-                    ColumnDefinitions="140,*,140,*"
-                    RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.ColumnSpan="4"
+                   
+                   ><StackPanel HorizontalAlignment="Stretch">
+                    <Grid Margin="4"><Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Proxy" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="cmbWarpAmneziaRegistrationProxy" Grid.Column="1" Width="400" HorizontalAlignment="Left" />
+                    </Grid>
+                    <Button x:Name="btnWarpAmneziaGenerateKey" Content="Generate WARP Key" Margin="4" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="txtWarpAmneziaKeyStatus" Margin="4" TextWrapping="Wrap" />
+<TextBlock
+                       
+                       
                         Margin="{StaticResource Margin4}"
                         FontWeight="SemiBold"
                         Text="WARP AmneziaWG settings" />
-                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Private key" />
-                    <TextBox x:Name="txtWarpAwgPrivateKey" Grid.Row="1" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="1" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Address" />
-                    <TextBox x:Name="txtWarpAwgAddress" Grid.Row="1" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="DNS" />
-                    <TextBox x:Name="txtWarpAwgDns" Grid.Row="2" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="2" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="MTU" />
-                    <TextBox x:Name="txtWarpAwgMtu" Grid.Row="2" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="3" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Jc" />
-                    <TextBox x:Name="txtWarpAwgJc" Grid.Row="3" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="3" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Jmin" />
-                    <TextBox x:Name="txtWarpAwgJmin" Grid.Row="3" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="4" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Jmax" />
-                    <TextBox x:Name="txtWarpAwgJmax" Grid.Row="4" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="4" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="S1" />
-                    <TextBox x:Name="txtWarpAwgS1" Grid.Row="4" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="5" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="S2" />
-                    <TextBox x:Name="txtWarpAwgS2" Grid.Row="5" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="5" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="H1" />
-                    <TextBox x:Name="txtWarpAwgH1" Grid.Row="5" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="6" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="H2" />
-                    <TextBox x:Name="txtWarpAwgH2" Grid.Row="6" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="6" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="H3" />
-                    <TextBox x:Name="txtWarpAwgH3" Grid.Row="6" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="7" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="H4" />
-                    <TextBox x:Name="txtWarpAwgH4" Grid.Row="7" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="7" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Endpoint" />
-                    <TextBox x:Name="txtWarpAwgEndpoint" Grid.Row="7" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="8" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Peer public key" />
-                    <TextBox x:Name="txtWarpAwgPublicKey" Grid.Row="8" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="8" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Preshared key" />
-                    <TextBox x:Name="txtWarpAwgPresharedKey" Grid.Row="8" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="9" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Allowed IPs" />
-                    <TextBox x:Name="txtWarpAwgAllowedIPs" Grid.Row="9" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="9" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Persistent keepalive" />
-                    <TextBox x:Name="txtWarpAwgPersistentKeepalive" Grid.Row="9" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="10" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Listen port" />
-                    <TextBox x:Name="txtWarpAwgListenPort" Grid.Row="10" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="11" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Scan IP family" />
-                    <ComboBox
-                        x:Name="cmbWarpAmneziaScanFamily"
-                        Grid.Row="11"
-                        Grid.Column="1"
-                        Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="11" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Scan type" />
-                    <ComboBox
-                        x:Name="cmbWarpAmneziaScanMode"
-                        Grid.Row="11"
-                        Grid.Column="3"
-                        Margin="{StaticResource Margin4}" />
-                    <CheckBox
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Private key" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgPrivateKey" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Address" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgAddress" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="DNS" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgDns" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="MTU" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgMtu" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Jc" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgJc" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Jmin" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgJmin" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Jmax" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgJmax" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="S1" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgS1" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="S2" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgS2" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="H1" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgH1" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="H2" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgH2" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="H3" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgH3" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="H4" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgH4" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Endpoint" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgEndpoint" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Peer public key" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgPublicKey" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Preshared key" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgPresharedKey" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Allowed IPs" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgAllowedIPs" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Persistent keepalive" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgPersistentKeepalive" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Listen port" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgListenPort" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Scan IP family" /><ComboBox
+ Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"                        x:Name="cmbWarpAmneziaScanFamily"
+                       
+                       
+                        Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Scan type" /><ComboBox
+ Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"                        x:Name="cmbWarpAmneziaScanMode"
+                       
+                       
+                        Margin="{StaticResource Margin4}" /></Grid>
+<CheckBox
                         x:Name="chkWarpAmneziaAutoScan"
-                        Grid.Row="12"
-                        Grid.ColumnSpan="4"
+                       
+                       
                         Margin="{StaticResource Margin4}"
-                        Content="Scan endpoints automatically on connect" />
-                    <StackPanel
-                        Grid.Row="13"
-                        Grid.ColumnSpan="4"
+                        HorizontalAlignment="Left" Content="Scan endpoints automatically on connect" />
+<WrapPanel
+                       
+                       
                         Margin="{StaticResource Margin4}"
                         Orientation="Horizontal">
                         <Button
@@ -366,41 +355,41 @@
                             Margin="{StaticResource Margin4}"
                             Content="Apply scanned endpoint"
                             IsEnabled="{Binding HasScannedWarpAmneziaEndpoint}" />
-                    </StackPanel>
-                    <TextBlock
+                    </WrapPanel>
+<TextBlock
                         x:Name="tbWarpAmneziaScanStatus"
-                        Grid.Row="14"
-                        Grid.ColumnSpan="4"
+                       
+                       
                         Margin="{StaticResource Margin4}"
                         TextWrapping="Wrap" />
-                </Grid>
+</StackPanel></Grid>
                 <Grid
                     x:Name="gridWarpMasque"
                     Grid.Row="2"
                     IsVisible="False"
-                    ColumnDefinitions="170,*,170,*"
-                    RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-                    <TextBlock Grid.Row="0" Grid.ColumnSpan="4" Margin="{StaticResource Margin4}" FontWeight="SemiBold" Text="WARP MASQUE/H2 settings" />
-                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Device name" />
-                    <TextBox x:Name="txtWarpMasqueDeviceName" Grid.Row="1" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="1" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="SNI" />
-                    <TextBox x:Name="txtWarpMasqueSni" Grid.Row="1" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Primary endpoint" />
-                    <TextBox x:Name="txtWarpMasqueEndpoint" Grid.Row="2" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="2" Grid.Column="2" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Endpoint port" />
-                    <TextBox x:Name="txtWarpMasqueEndpointPort" Grid.Row="2" Grid.Column="3" Margin="{StaticResource Margin4}" />
-                    <TextBlock Grid.Row="3" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Endpoint candidates" />
-                    <TextBox x:Name="txtWarpMasqueEndpointCandidates" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Margin="{StaticResource Margin4}" AcceptsReturn="True" MinHeight="56" TextWrapping="Wrap" />
-                    <TextBlock Grid.Row="4" Grid.Column="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="DNS servers" />
-                    <TextBox x:Name="txtWarpMasqueDns" Grid.Row="4" Grid.Column="1" Margin="{StaticResource Margin4}" />
-                    <CheckBox x:Name="chkWarpMasqueAutoScan" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Margin="{StaticResource Margin4}" Content="Scan endpoints automatically on connect" />
-                    <CheckBox x:Name="chkWarpMasqueHttp2Enabled" Grid.Row="5" Grid.Column="1" Margin="{StaticResource Margin4}" Content="Use HTTP/2" />
-                    <StackPanel Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="2" Margin="{StaticResource Margin4}" Orientation="Horizontal">
+                   
+                   ><StackPanel HorizontalAlignment="Stretch">
+                    <Grid Margin="4"><Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Proxy" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="cmbWarpMasqueRegistrationProxy" Grid.Column="1" Width="400" HorizontalAlignment="Left" />
+                    </Grid>
+                    <Button x:Name="btnWarpMasqueGenerateKey" Content="Generate WARP Key" Margin="4" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="txtWarpMasqueKeyStatus" Margin="4" TextWrapping="Wrap" />
+<TextBlock Margin="{StaticResource Margin4}" FontWeight="SemiBold" Text="WARP MASQUE/H2 settings" />
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Device name" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpMasqueDeviceName" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="SNI" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpMasqueSni" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Primary endpoint" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpMasqueEndpoint" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Endpoint port" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpMasqueEndpointPort" Margin="{StaticResource Margin4}" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Endpoint candidates" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpMasqueEndpointCandidates" Margin="{StaticResource Margin4}" AcceptsReturn="True" MinHeight="56" TextWrapping="Wrap" /></Grid>
+<Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="DNS servers" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpMasqueDns" Margin="{StaticResource Margin4}" /></Grid>
+<CheckBox x:Name="chkWarpMasqueAutoScan" Margin="{StaticResource Margin4}" HorizontalAlignment="Left" Content="Scan endpoints automatically on connect" />
+<CheckBox x:Name="chkWarpMasqueHttp2Enabled" Margin="{StaticResource Margin4}" HorizontalAlignment="Left" Content="Use HTTP/2" />
+<WrapPanel Margin="{StaticResource Margin4}" Orientation="Horizontal">
                         <Button x:Name="btnScanWarpMasqueEndpoint" Margin="{StaticResource Margin4}" Content="Rescan endpoints" />
                         <Button x:Name="btnApplyWarpMasqueEndpoint" Margin="{StaticResource Margin4}" Content="Apply scanned endpoint" IsEnabled="{Binding HasScannedWarpMasqueEndpoint}" />
-                    </StackPanel>
-                    <TextBlock x:Name="tbWarpMasqueScanStatus" Grid.Row="6" Grid.ColumnSpan="4" Margin="{StaticResource Margin4}" TextWrapping="Wrap" />
-                </Grid>
+                    </WrapPanel>
+<TextBlock x:Name="tbWarpMasqueScanStatus" Margin="{StaticResource Margin4}" TextWrapping="Wrap" />
+</StackPanel></Grid>
                 <Grid
                     x:Name="gridVLESS"
                     Grid.Row="2"
@@ -1585,10 +1574,21 @@
                 </Grid>
                 <Separator x:Name="sepaFeatures" Grid.Row="9" Margin="{StaticResource MarginTb8}" />
 
-                <GroupBox
+<GroupBox x:Name="grpPsiphon" Header="Psiphon Over" Grid.Row="10">
+    <Grid ColumnDefinitions="230,*" RowDefinitions="Auto,Auto">
+        <TextBlock Grid.Row="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Enable Psiphon Over" />
+        <ToggleSwitch x:Name="togPsiphonOver" Grid.Row="0" Grid.Column="1" Margin="{StaticResource Margin4}" HorizontalAlignment="Left" />
+        <TextBlock Grid.Row="1" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Connection country" />
+        <ComboBox x:Name="cmbPsiphonRegion" Grid.Row="1" Grid.Column="1" Margin="{StaticResource Margin4}" HorizontalAlignment="Stretch" IsEnabled="{Binding PsiphonOver}">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="models:PsiphonRegionOption"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+    </Grid>
+</GroupBox>
+
+                                <GroupBox
                     x:Name="grpPingNFeatures"
-                    Grid.Row="10"
-                    Header="PingN: Desync and SNI Spoofing"
+                    Grid.Row="11"
+                    Header="Desync and SNI Spoofing"
                     IsVisible="{Binding IsPingNFeatureAvailable}">
                     <Grid ColumnDefinitions="230,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
                         <TextBlock Grid.Row="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Desync profile" TextAlignment="Left" />

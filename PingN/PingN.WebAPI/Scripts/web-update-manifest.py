@@ -76,6 +76,16 @@ def load_assets() -> dict[str, dict[str, str]]:
 
 
 ASSETS = load_assets()
+# These community builds may be absent; every other RID remains mandatory.
+OPTIONAL_RIDS = {"linux-riscv64"}
+
+
+def release_rids(dist: Path) -> list[str]:
+    # Ignore only a completely absent optional pair. An incomplete, empty or
+    # corrupt upload is still rejected by the regular package validation.
+    return [rid for rid in ASSETS if rid not in OPTIONAL_RIDS or any(
+        (dist / ASSETS[rid][kind]).exists() for kind in ("full", "update")
+    )]
 
 
 def full_asset_name(rid: str) -> str:
@@ -91,7 +101,7 @@ def asset_url(repository: str, version: str, asset: str) -> str:
 
 
 def require_release_files(dist: Path) -> None:
-    for rid in ASSETS:
+    for rid in release_rids(dist):
         for asset in (full_asset_name(rid), app_asset_name(rid)):
             path = dist / asset
             if not path.is_file() or path.stat().st_size == 0:
@@ -233,7 +243,7 @@ def build_manifest(dist: Path, version: str, repository: str, commit: str, build
         "version": version,
         "commit": commit,
         "buildDate": build_date,
-        "packages": [package_entry(dist, repository, version, rid) for rid in ASSETS],
+        "packages": [package_entry(dist, repository, version, rid) for rid in release_rids(dist)],
     }
 
 
@@ -255,8 +265,9 @@ def verify_manifest(manifest_path: Path, dist: Path, repository: str | None, ver
         fail(f"{manifest_path} has no build date")
 
     packages = manifest.get("packages")
-    if not isinstance(packages, list) or len(packages) != len(ASSETS):
-        fail(f"{manifest_path} must contain exactly {len(ASSETS)} packages")
+    expected_rids = release_rids(dist)
+    if not isinstance(packages, list) or len(packages) != len(expected_rids):
+        fail(f"{manifest_path} must contain exactly {len(expected_rids)} packages for the available release runtimes")
     by_rid = {}
     for package in packages:
         if not isinstance(package, dict):
@@ -288,7 +299,7 @@ def verify_manifest(manifest_path: Path, dist: Path, repository: str | None, ver
         verify_app_archive_identity(path, rid, manifest_version, manifest["commit"], manifest["buildDate"])
         by_rid[rid] = package
 
-    for rid in ASSETS:
+    for rid in expected_rids:
         if rid not in by_rid:
             fail(f"{manifest_path} is missing runtime {rid}")
     require_release_files(dist)

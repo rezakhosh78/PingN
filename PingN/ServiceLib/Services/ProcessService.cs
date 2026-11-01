@@ -9,6 +9,8 @@ public class ProcessService : IDisposable
     public int Id => _process.Id;
     public IntPtr Handle => _process.Handle;
     public bool HasExited => _process.HasExited;
+    public int ExitCode => _process.ExitCode;
+    public Task WaitForExitAsync(CancellationToken token = default) => _process.WaitForExitAsync(token);
 
     public ProcessService(
         string fileName,
@@ -72,48 +74,14 @@ public class ProcessService : IDisposable
 
     public async Task StopAsync()
     {
-        if (_process.HasExited)
-        {
-            return;
-        }
-
-        try
-        {
-            if (_process.StartInfo.RedirectStandardOutput)
-            {
-                try
-                {
-                    _process.CancelOutputRead();
-                }
-                catch { }
-                try
-                {
-                    _process.CancelErrorRead();
-                }
-                catch { }
-            }
-
-            try
-            {
-                if (Utils.IsNonWindows())
-                {
-                    _process.Kill(true);
-                }
-            }
-            catch { }
-
-            try
-            {
-                _process.Kill();
-            }
-            catch { }
-
-            await Task.Delay(100);
-        }
-        catch (Exception ex)
-        {
-            await _updateFunc?.Invoke(true, ex.Message);
-        }
+        if (_process.HasExited) return;
+        // Kill descendants on Windows too; killing only a launcher can leave its
+        // core child and existing TCP streams alive.
+        try { _process.Kill(entireProcessTree: true); }
+        catch (PlatformNotSupportedException) { _process.Kill(); }
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await _process.WaitForExitAsync(timeout.Token);
+        if (!_process.HasExited) throw new IOException("The core process did not exit.");
     }
 
     private void RegisterEventHandlers()
@@ -129,17 +97,9 @@ public class ProcessService : IDisposable
         _process.OutputDataReceived += dataHandler;
         _process.ErrorDataReceived += dataHandler;
 
-        _process.Exited += (s, e) =>
-        {
-            try
-            {
-                _process.OutputDataReceived -= dataHandler;
-                _process.ErrorDataReceived -= dataHandler;
-            }
-            catch
-            {
-            }
-        };
+        // Exited can precede the final redirected output events. Keep handlers attached
+        // until disposal so fast startup failures retain their diagnostic output.
+
     }
 
     public void Dispose()

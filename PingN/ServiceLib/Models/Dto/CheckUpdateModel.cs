@@ -10,5 +10,6 @@ public partial class CheckUpdateModel : ReactiveObject
     public string? FileName { get; set; }
     public bool? IsFinished { get; set; }
     public bool IsGeoFile { get; set; }
-    public string CoreTypeForStorage => IsGeoFile ? "GeoFiles" : (CoreType?.ToString() ?? "");
+    public string? DnsCoreKind { get; set; }
+    public string CoreTypeForStorage => DnsCoreKind is not null ? (DnsCoreKind == "masterdns" ? "MasterDNS Client" : "DNSTT Client") : IsGeoFile ? "GeoFiles" : (CoreType?.ToString() ?? "");
 }

@@ -9,6 +9,14 @@ public partial class AddServer2ViewModel : MyReactiveObject, ICloseable
     public Interaction<RxVoid, string?> BrowseConfigFileInteraction { get; } = new();
 
     [Reactive]
+    public partial bool PsiphonOver { get; set; }
+
+    [Reactive]
+    public partial PsiphonRegionOption? SelectedPsiphonRegion { get; set; }
+
+    public IReadOnlyList<PsiphonRegionOption> PsiphonRegions => PsiphonRegionOption.All;
+
+    [Reactive]
     public partial ProfileItem SelectedSource { get; set; }
 
     [Reactive]
@@ -208,6 +216,8 @@ public partial class AddServer2ViewModel : MyReactiveObject, ICloseable
         DesyncAutoTtlMin = (desync?.AutoTtlMin ?? 3).ToString();
         DesyncAutoTtlMax = (desync?.AutoTtlMax ?? 20).ToString();
         DesyncFakeSni = desync?.FakeSni ?? string.Empty;
+        PsiphonOver = extra.PsiphonOver;
+        SelectedPsiphonRegion = PsiphonRegionOption.All.FirstOrDefault(item => item.Code == extra.PsiphonEgressRegion) ?? PsiphonRegionOption.All[0];
         SniSpoofingPlusEnabled = extra.SniSpoofingPlusEnabled == true;
         SniSpoofingPlusFakeSni = extra.SniSpoofingPlusFakeSni ?? PingNSniSpoofingSettings.DefaultFakeSni;
         var sniSettings = JsonUtils.Deserialize<PingNSniSpoofingSettings>(extra.PingNSniSpoofingJson) ?? new();
@@ -308,6 +318,8 @@ public partial class AddServer2ViewModel : MyReactiveObject, ICloseable
         {
             IsSingboxEndpoint = IsSingboxEndpoint ? true : null,
             PingNDesyncJson = JsonSerializer.Serialize(desyncSettings),
+            PsiphonOver = PsiphonOver,
+            PsiphonEgressRegion = SelectedPsiphonRegion?.Code,
             SniSpoofingPlusEnabled = SniSpoofingPlusEnabled,
             PingNSniSpoofingJson = JsonSerializer.Serialize(sniOptions),
             SniSpoofingPlusFakeSni = normalizedFakeSni,

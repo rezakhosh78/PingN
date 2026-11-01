@@ -7,6 +7,7 @@ public class Config
 
     public string IndexId { get; set; }
     public string SubIndexId { get; set; }
+    public bool BuiltinWarpInitialized { get; set; }
 
     #endregion property
 

@@ -79,6 +79,9 @@
                         </Button.Content>
                     </Button>
 
+                    <Button x:Name="btnToggleConnection" Margin="{StaticResource MarginLr4}" Classes="IconButton Success" ToolTip.Tip="Connect">
+                        <PathIcon x:Name="iconToggleConnection" Data="M16.56,5.44 L15.11,6.89 C16.84,7.94 18,9.83 18,12 C18,15.31 15.31,18 12,18 C8.69,18 6,15.31 6,12 C6,9.83 7.16,7.94 8.88,6.88 L7.44,5.44 C5.36,6.88 4,9.28 4,12 C4,16.42 7.58,20 12,20 C16.42,20 20,16.42 20,12 C20,9.28 18.64,6.88 16.56,5.44 Z M13,3 L11,3 L11,13 L13,13 Z" />
+                    </Button>
                     <Button
                         x:Name="btnFastRealPing"
                         Margin="{StaticResource MarginLr4}"
@@ -113,14 +116,17 @@
                 ItemsSource="{Binding ProfileItems}">
                 <DataGrid.KeyBindings>
                     <KeyBinding Command="{Binding Export2ShareUrlCmd}" Gesture="Ctrl+C" />
-                    <KeyBinding Command="{Binding SetDefaultServerCmd}" Gesture="Enter" />
+                    <KeyBinding Command="{Binding ToggleSelectedConnectionCmd}" Gesture="Enter" />
                 </DataGrid.KeyBindings>
                 <DataGrid.ContextMenu>
                     <ContextMenu>
+                        <MenuItem x:Name="menuConnectSelected" Header="Connect" />
+                        <MenuItem x:Name="menuDisconnectSelected" Header="Disconnect" />
+                        <Separator />
                         <MenuItem
                             x:Name="menuSetDefaultServer"
                             Header="{x:Static resx:ResUI.menuSetDefaultServer}"
-                            InputGesture="Enter" />
+                            InputGesture="" />
                         <MenuItem
                             x:Name="menuEditServer"
                             Header="{x:Static resx:ResUI.menuEditServer}"
@@ -208,6 +214,21 @@
                 </DataGrid.ContextMenu>
 
                 <DataGrid.Columns>
+                    <DataGridTemplateColumn SortMemberPath="Delay" Tag="DelayVal">
+                        <DataGridTemplateColumn.Header>
+                            <TextBlock Text="{x:Static resx:ResUI.LvTestDelay}" />
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    Margin="{StaticResource MarginLr8}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding Delay, Converter={StaticResource DelayColorConverter}}"
+                                    Text="{Binding Path=DelayVal, Mode=OneWay}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn
                         Width="140"
                         Binding="{Binding ConfigTypeLabel}"
@@ -220,27 +241,48 @@
                         </DataGridTemplateColumn.Header>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="{StaticResource MarginLr8}" Orientation="Horizontal">
+                                <StackPanel Margin="{StaticResource MarginLr8}" Orientation="Horizontal" FlowDirection="LeftToRight">
+
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding Remarks}" />
                                     <Label
                                         Margin="{StaticResource MarginLr4}"
                                         Classes="Solid Red"
                                         Content="{x:Static resx:ResUI.TipActiveServer}"
                                         IsVisible="{Binding IsActive}"
                                         Theme="{DynamicResource TagLabel}" />
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Text="{Binding Remarks}" />
-                                    <Label Margin="{StaticResource MarginLr4}" Classes="Solid" Content="Desync" IsVisible="{Binding DesyncEnabled}" Theme="{DynamicResource TagLabel}" />
-                                    <Label Margin="{StaticResource MarginLr4}" Classes="Solid" Content="SNI Spoofing Plus" IsVisible="{Binding SniSpoofingEnabled}" Theme="{DynamicResource TagLabel}" />
-                                </StackPanel>
+</StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Psiphon" Tag="Psiphon" Width="115" CanUserSort="False" CanUserReorder="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="8,0" VerticalAlignment="Center" FontWeight="SemiBold"
+                                           Text="{Binding Psiphon.Text}" Foreground="{Binding Psiphon.Color}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Mode" Tag="Mode" Width="100" MinWidth="24" CanUserResize="True" CanUserSort="False" CanUserReorder="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid ClipToBounds="True"><StackPanel Orientation="Horizontal" Margin="4,0" VerticalAlignment="Center">
+                                    <Border Margin="0,2,6,2" Padding="8,3" CornerRadius="6" Background="#1565C0" IsVisible="{Binding DesyncEnabled}">
+                                        <TextBlock Text="Desync" Foreground="White" FontWeight="Bold" FontSize="12" />
+                                    </Border>
+                                    <Border Margin="0,2,6,2" Padding="8,3" CornerRadius="6" Background="#7B1FA2" IsVisible="{Binding SniSpoofingEnabled}">
+                                        <TextBlock Text="SNI Spoofing" Foreground="White" FontWeight="Bold" FontSize="12" />
+                                    </Border>
+                                </StackPanel></Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
                     <DataGridTextColumn
                         Width="120"
-                        Binding="{Binding Address}"
+                        Binding="{Binding AddressDisplay}"
                         Header="{x:Static resx:ResUI.LvAddress}"
                         Tag="Address" />
                     <DataGridTextColumn
@@ -263,21 +305,7 @@
                         Binding="{Binding SubRemarks}"
                         Header="{x:Static resx:ResUI.LvSubscription}"
                         Tag="SubRemarks" />
-                    <DataGridTemplateColumn SortMemberPath="Delay" Tag="DelayVal">
-                        <DataGridTemplateColumn.Header>
-                            <TextBlock Text="{x:Static resx:ResUI.LvTestDelay}" />
-                        </DataGridTemplateColumn.Header>
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock
-                                    Margin="{StaticResource MarginLr8}"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
-                                    Foreground="{Binding Delay, Converter={StaticResource DelayColorConverter}}"
-                                    Text="{Binding Path=DelayVal, Mode=OneWay}" />
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                    
                     <DataGridTextColumn
                         Width="100"
                         Binding="{Binding SpeedVal}"

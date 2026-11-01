@@ -38,6 +38,7 @@ public class CoreConfigContextBuilder
         var context = new CoreConfigContext
         {
             Node = node,
+            SourceNode = node,
             RunCoreType = runCoreType,
             AllProxiesMap = [],
             AppConfig = config,

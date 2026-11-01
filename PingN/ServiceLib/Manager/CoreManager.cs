@@ -13,10 +13,15 @@ public class CoreManager
     private WindowsJobService? _processJob;
 
     private ProcessService? _processService;
+    public bool IsCoreRunning => _processService is { HasExited: false };
     private ProcessService? _processPreService;
     private CancellationTokenSource? _featureLogCancellation;
     private Task? _featureLogTask;
+    private CancellationTokenSource? _dnsStartCancellation;
+    public void CancelPendingDnsStart() => _dnsStartCancellation?.Cancel();
     private bool _linuxSudo = false;
+    private readonly SemaphoreSlim _stopGate = new(1, 1);
+    public bool LastStopSucceeded { get; private set; } = true;
     private Func<bool, string, Task>? _updateFunc;
     private const string _tag = "CoreHandler";
 
@@ -64,7 +69,7 @@ public class CoreManager
 
     /// <param name="mainContext">Resolved main context (with pre-socks ports already merged if applicable).</param>
     /// <param name="preContext">Optional pre-socks context passed to <see cref="CoreStartPreService"/>.</param>
-    public async Task LoadCore(CoreConfigContext? mainContext, CoreConfigContext? preContext)
+    public async Task LoadCore(CoreConfigContext? mainContext, CoreConfigContext? preContext, CancellationToken connectionToken = default)
     {
         if (mainContext == null)
         {
@@ -72,7 +77,24 @@ public class CoreManager
             return;
         }
 
+        connectionToken.ThrowIfCancellationRequested();
+        await CoreStop();
+        connectionToken.ThrowIfCancellationRequested();
         var node = mainContext.Node;
+        _dnsStartCancellation?.Dispose();
+        _dnsStartCancellation = CancellationTokenSource.CreateLinkedTokenSource(connectionToken);
+        var dnsStartToken = _dnsStartCancellation.Token;
+        var dnsInboundMoved = false;
+        if (node.GetProtocolExtra().DnsTunnel is not null)
+        {
+            try { dnsInboundMoved = await DnsTunnelPortManager.PrepareAsync(node, mainContext.AppConfig, _updateFunc); }
+            catch (Exception ex)
+            {
+                var label = node.GetProtocolExtra().DnsTunnel?.Kind == "masterdns" ? "MasterDNS" : "DNSTT";
+                await UpdateFunc(true, $"[{label}] Port preparation failed: {ex.Message}");
+                return;
+            }
+        }
         if (WarpMasqueRuntimeManager.NormalizeLocalPort(node))
         {
             var storedMasqueProfile = await AppManager.Instance.GetProfileItem(node.IndexId);
@@ -125,7 +147,7 @@ public class CoreManager
         OberonLaunchPlan? oberonPlan;
         try
         {
-            oberonPlan = await OberonRuntimeManager.PrepareAsync(node);
+            oberonPlan = await OberonRuntimeManager.PrepareAsync(node, dnsStartToken);
         }
         catch (Exception ex)
         {
@@ -154,10 +176,21 @@ public class CoreManager
             ? "WARP MASQUE/H2: disabled for this profile."
             : "WARP MASQUE/H2: core prepared; registering and connecting on startup.");
 
+        PsiphonLaunchPlan? psiphonPlan;
+        try
+        {
+            psiphonPlan = await PsiphonRuntimeManager.PrepareAsync(mainContext.SourceNode ?? node, fileName, mainContext.RunCoreType);
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("Psiphon Over preparation failed", ex);
+            await UpdateFunc(true, $"Psiphon Over: {ex.Message}");
+            return;
+        }
+
         await UpdateFunc(false, $"{node.GetSummary()}");
         await UpdateFunc(false, $"{Utils.GetRuntimeInfo()}");
         await UpdateFunc(false, string.Format(ResUI.StartService, DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")));
-        await CoreStop();
         await Task.Delay(100);
         if (desyncPlan is not null || sniPlan is not null)
         {
@@ -188,7 +221,9 @@ public class CoreManager
             try
             {
                 if (sniPlan is not null) await UpdateFunc(false, "SNI Spoofing Plus: starting elevated CLI...");
+                dnsStartToken.ThrowIfCancellationRequested();
                 await SniSpoofingPlusRuntimeManager.StartAsync(sniPlan);
+                dnsStartToken.ThrowIfCancellationRequested();
                 if (sniPlan is not null) await UpdateFunc(false, "SNI Spoofing Plus: READY; local listener started (traffic still needs verification).");
             }
             catch (Exception ex)
@@ -199,7 +234,9 @@ public class CoreManager
             try
             {
                 if (desyncPlan is not null) await UpdateFunc(false, "Desync: starting elevated winws2...");
+                dnsStartToken.ThrowIfCancellationRequested();
                 await DesyncRuntimeManager.StartAsync(desyncPlan);
+                dnsStartToken.ThrowIfCancellationRequested();
                 if (desyncPlan is not null) await UpdateFunc(false, "Desync: READY; packet interception started (traffic still needs verification).");
             }
             catch (Exception ex)
@@ -213,7 +250,9 @@ public class CoreManager
                     await UpdateFunc(false, oberonPlan.AutoScan
                         ? "WARP AmneziaWG: starting Oberon and scanning endpoints..."
                         : "WARP AmneziaWG: starting Oberon with the saved endpoint...");
-                await OberonRuntimeManager.StartAsync(oberonPlan, _updateFunc);
+                dnsStartToken.ThrowIfCancellationRequested();
+                await OberonRuntimeManager.StartAsync(oberonPlan, _updateFunc, dnsStartToken);
+                dnsStartToken.ThrowIfCancellationRequested();
             }
             catch (Exception ex)
             {
@@ -223,29 +262,45 @@ public class CoreManager
             try
             {
                 if (warpMasquePlan is not null) await UpdateFunc(false, "WARP MASQUE/H2: starting core and connecting...");
-                await WarpMasqueRuntimeManager.StartAsync(warpMasquePlan, _updateFunc);
+                dnsStartToken.ThrowIfCancellationRequested();
+                await WarpMasqueRuntimeManager.StartAsync(warpMasquePlan, _updateFunc, dnsStartToken);
+                dnsStartToken.ThrowIfCancellationRequested();
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"WARP MASQUE/H2 start failed: {ex.Message}", ex);
             }
 
-            await CoreStart(mainContext);
+            await DnsTunnelRuntimeManager.StartAsync(node, _updateFunc, dnsStartToken);
+            dnsStartToken.ThrowIfCancellationRequested();
+            dnsStartToken.ThrowIfCancellationRequested();
+                await CoreStart(mainContext);
+                dnsStartToken.ThrowIfCancellationRequested();
             if (_processService is null or { HasExited: true })
             {
                 throw new InvalidOperationException(ResUI.FailedToRunCore);
             }
 
+            await PsiphonRuntimeManager.StartAsync(psiphonPlan, () => _processService is { HasExited: false });
             await WaitForProxyPort(preContext);
-            await CoreStartPreService(preContext);
+            dnsStartToken.ThrowIfCancellationRequested();
+                await CoreStartPreService(preContext);
+                dnsStartToken.ThrowIfCancellationRequested();
             AppManager.Instance.RunningCoreType = preContext?.RunCoreType ?? mainContext.RunCoreType;
+            if (dnsInboundMoved) await SysProxyHandler.UpdateSysProxy(mainContext.AppConfig, false);
             await UpdateFunc(true, $"{node.GetSummary()}");
+        }
+        catch (OperationCanceledException) when (connectionToken.IsCancellationRequested || dnsStartToken.IsCancellationRequested)
+        {
+            await CoreStop();
+            await UpdateFunc(false, "Connection startup cancelled; all owned tunnel processes stopped.");
         }
         catch (Exception ex)
         {
             Logging.SaveLog(_tag, ex);
             await CoreStop();
-            await UpdateFunc(true, ex.Message);
+            var errorLabel = node.GetProtocolExtra().DnsTunnel?.Kind switch { "masterdns" => "[MasterDNS] ", "dnstt-ssh" => "[DNSTT] ", _ => string.Empty };
+            await UpdateFunc(true, errorLabel + ex.Message);
             if (desyncPlan is not null) await ReportRuntimeErrors("Desync", desyncPlan.RuntimeDirectory, "winws2-stderr.log", "winws2-stdout.log", "winws2.log");
             if (sniPlan is not null) await ReportRuntimeErrors("SNI Spoofing Plus", sniPlan.RuntimeDirectory, "sni-stderr.log", "sni-stdout.log");
         }
@@ -347,43 +402,51 @@ public class CoreManager
 
     public async Task CoreStop()
     {
+        CancelPendingDnsStart();
+        await _stopGate.WaitAsync();
         try
         {
-            _featureLogCancellation?.Cancel();
-            if (_featureLogTask is not null) await _featureLogTask;
-            _featureLogCancellation?.Dispose();
-            _featureLogCancellation = null;
-            _featureLogTask = null;
-            await DesyncRuntimeManager.StopAsync();
-            await SniSpoofingPlusRuntimeManager.StopAsync();
-
-            if (_linuxSudo)
+            var main = _processService; _processService = null;
+            var pre = _processPreService; _processPreService = null;
+            async Task StopProcess(ProcessService? process)
             {
-                await CoreAdminManager.Instance.KillProcessAsLinuxSudo();
-                _linuxSudo = false;
+                if (process is null) return;
+                try { await process.StopAsync(); }
+                finally { process.Dispose(); }
             }
-
-            if (_processService != null)
+            LastStopSucceeded = await CoreShutdownCoordinator.StopAllAsync(new (string, Func<Task>)[]
             {
-                await _processService.StopAsync();
-                _processService.Dispose();
-                _processService = null;
-            }
-
-            if (_processPreService != null)
+                ("main core", () => StopProcess(main)),
+                ("pre core", () => StopProcess(pre)),
+                ("Windows core job", () =>
+                {
+                    if (OperatingSystem.IsWindows()) { _processJob?.Dispose(); _processJob = null; }
+                    return Task.CompletedTask;
+                }),
+                ("DNS clients", DnsTunnelRuntimeManager.StopAsync),
+                ("WARP AmneziaWG", OberonRuntimeManager.StopAsync),
+                ("WARP MASQUE/H2", WarpMasqueRuntimeManager.StopAsync),
+                ("Psiphon", PsiphonRuntimeManager.StopAsync),
+                ("Desync", DesyncRuntimeManager.StopAsync),
+                ("SNI Spoofing Plus", SniSpoofingPlusRuntimeManager.StopAsync),
+                ("runtime log readers", async () =>
+                {
+                    _featureLogCancellation?.Cancel();
+                    if (_featureLogTask is not null) await _featureLogTask.WaitAsync(TimeSpan.FromSeconds(3));
+                    _featureLogCancellation?.Dispose(); _featureLogCancellation = null; _featureLogTask = null;
+                }),
+                ("elevated Linux core", async () =>
+                {
+                    if (_linuxSudo) await CoreAdminManager.Instance.KillProcessAsLinuxSudo();
+                    _linuxSudo = false;
+                }),
+            }, (name, error) =>
             {
-                await _processPreService.StopAsync();
-                _processPreService.Dispose();
-                _processPreService = null;
-            }
-
-            await OberonRuntimeManager.StopAsync();
-            await WarpMasqueRuntimeManager.StopAsync();
+                Logging.SaveLog("Disconnect " + name, error);
+                NoticeManager.Instance.SendMessage("Disconnect: failed to stop " + name + ": " + error.Message);
+            });
         }
-        catch (Exception ex)
-        {
-            Logging.SaveLog(_tag, ex);
-        }
+        finally { _stopGate.Release(); }
     }
 
     #region Private

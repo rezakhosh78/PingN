@@ -79,6 +79,10 @@
                     <materialDesign:PackIcon VerticalAlignment="Center" Kind="ArrowSplitVertical" />
                 </Button>
 
+                <Button x:Name="btnToggleConnection" Width="30" Height="30" Margin="{StaticResource MarginLeftRight4}"
+                    Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}" ToolTip="Connect" AutomationProperties.Name="Connect / Disconnect">
+                    <materialDesign:PackIcon x:Name="iconToggleConnection" Kind="Power" VerticalAlignment="Center" />
+                </Button>
                 <Button
                     x:Name="btnFastRealPing"
                     Width="30"
@@ -117,15 +121,18 @@
                     <KeyBinding Command="ApplicationCommands.NotACommand" Gesture="Ctrl+C" />
                     <KeyBinding Command="ApplicationCommands.NotACommand" Gesture="Ctrl+V" />
                     <KeyBinding Command="ApplicationCommands.NotACommand" Gesture="Delete" />
-                    <KeyBinding Command="ApplicationCommands.NotACommand" Gesture="Enter" />
+                    <KeyBinding Command="{Binding ToggleSelectedConnectionCmd}" Gesture="Enter" />
                 </DataGrid.InputBindings>
                 <DataGrid.ContextMenu>
                     <ContextMenu Style="{StaticResource DefContextMenu}">
+                        <MenuItem x:Name="menuConnectSelected" Header="Connect" />
+                        <MenuItem x:Name="menuDisconnectSelected" Header="Disconnect" />
+                        <Separator />
                         <MenuItem
                             x:Name="menuSetDefaultServer"
                             Height="{StaticResource MenuItemHeight}"
                             Header="{x:Static resx:ResUI.menuSetDefaultServer}"
-                            InputGestureText="Enter" />
+                            InputGestureText="" />
                         <MenuItem
                             x:Name="menuEditServer"
                             Height="{StaticResource MenuItemHeight}"
@@ -281,18 +288,60 @@
                 </DataGrid.Resources>
                 <DataGrid.Columns>
                     <base:MyDGTextColumn
+                        Width="100"
+                        Binding="{Binding DelayVal}"
+                        ExName="DelayVal"
+                        Header="{x:Static resx:ResUI.LvTestDelay}"
+                        SortMemberPath="Delay">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="HorizontalAlignment" Value="Right" />
+                                <Setter Property="Foreground" Value="{Binding Delay, Converter={StaticResource DelayColorConverter}}" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </base:MyDGTextColumn>
+                    <base:MyDGTextColumn
                         Width="80"
                         Binding="{Binding ConfigType}"
                         ExName="ConfigType"
                         Header="{x:Static resx:ResUI.LvServiceType}" />
                     <base:MyDGTextColumn
                         Width="150"
-                        Binding="{Binding Remarks}"
+                        Binding="{Binding RemarksDisplay}"
                         ExName="Remarks"
-                        Header="{x:Static resx:ResUI.LvRemarks}" />
+                        Header="{x:Static resx:ResUI.LvRemarks}">
+                        <base:MyDGTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FlowDirection" Value="LeftToRight" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </base:MyDGTextColumn.ElementStyle>
+                    </base:MyDGTextColumn>
+                    <DataGridTemplateColumn Header="Psiphon" Width="115" CanUserSort="False" CanUserReorder="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="8,0" VerticalAlignment="Center" FontWeight="SemiBold"
+                                           Text="{Binding Psiphon.Text}" Foreground="{Binding Psiphon.Color}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Mode" Width="100" MinWidth="24" CanUserResize="True" CanUserSort="False" CanUserReorder="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid ClipToBounds="True"><StackPanel Orientation="Horizontal" Margin="4,0" VerticalAlignment="Center">
+                                    <Border Margin="0,2,6,2" Padding="8,3" CornerRadius="6" Background="#1565C0" Visibility="{Binding DesyncEnabled, Converter={StaticResource BoolToVisConverter}}">
+                                        <TextBlock Text="Desync" Foreground="White" FontWeight="Bold" FontSize="12" />
+                                    </Border>
+                                    <Border Margin="0,2,6,2" Padding="8,3" CornerRadius="6" Background="#7B1FA2" Visibility="{Binding SniSpoofingEnabled, Converter={StaticResource BoolToVisConverter}}">
+                                        <TextBlock Text="SNI Spoofing" Foreground="White" FontWeight="Bold" FontSize="12" />
+                                    </Border>
+                                </StackPanel></Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <base:MyDGTextColumn
                         Width="120"
-                        Binding="{Binding Address}"
+                        Binding="{Binding AddressDisplay}"
                         ExName="Address"
                         Header="{x:Static resx:ResUI.LvAddress}" />
                     <base:MyDGTextColumn
@@ -315,19 +364,7 @@
                         Binding="{Binding SubRemarks}"
                         ExName="SubRemarks"
                         Header="{x:Static resx:ResUI.LvSubscription}" />
-                    <base:MyDGTextColumn
-                        Width="100"
-                        Binding="{Binding DelayVal}"
-                        ExName="DelayVal"
-                        Header="{x:Static resx:ResUI.LvTestDelay}"
-                        SortMemberPath="Delay">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="HorizontalAlignment" Value="Right" />
-                                <Setter Property="Foreground" Value="{Binding Delay, Converter={StaticResource DelayColorConverter}}" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </base:MyDGTextColumn>
+                    
                     <base:MyDGTextColumn
                         Width="100"
                         Binding="{Binding SpeedVal}"

@@ -15,6 +15,11 @@ public partial class ProfilesView
     public ProfilesView()
     {
         InitializeComponent();
+        lstProfiles.PreviewMouseRightButtonDown += (_, e) =>
+        {
+            var row = FindAncestor<DataGridRow>((DependencyObject)e.OriginalSource);
+            if (row is not null) { lstProfiles.SelectedItem = row.Item; row.Focus(); }
+        };
         lstGroup.MaxHeight = Math.Floor(SystemParameters.WorkArea.Height * 0.20 / 40) * 40;
 
         _config = AppManager.Instance.Config;
@@ -51,6 +56,8 @@ public partial class ProfilesView
             this.BindCommand(ViewModel, vm => vm.RemoveServerCmd, v => v.menuRemoveServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.RemoveDuplicateServerCmd, v => v.menuRemoveDuplicateServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.CopyServerCmd, v => v.menuCopyServer).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.ConnectSelectedCmd, v => v.menuConnectSelected).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.DisconnectSelectedCmd, v => v.menuDisconnectSelected).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.SetDefaultServerCmd, v => v.menuSetDefaultServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.ShareServerCmd, v => v.menuShareServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.GenGroupAllServerCmd, v => v.menuGenGroupAllServer).DisposeWith(disposables);
@@ -73,6 +80,12 @@ public partial class ProfilesView
             this.BindCommand(ViewModel, vm => vm.SpeedServerCmd, v => v.menuSpeedServer).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.SortServerResultCmd, v => v.menuSortServerResult).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.RemoveInvalidServerResultCmd, v => v.menuRemoveInvalidServerResult).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.ToggleConnectionCmd, v => v.btnToggleConnection).DisposeWith(disposables);
+            this.WhenAnyValue(v => v.ViewModel.ConnectionActive).Subscribe(active =>
+            {
+                btnToggleConnection.ToolTip = active ? "Disconnect" : "Connect";
+                iconToggleConnection.Foreground = active ? System.Windows.Media.Brushes.OrangeRed : System.Windows.Media.Brushes.SeaGreen;
+            }).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.FastRealPingCmd, v => v.btnFastRealPing).DisposeWith(disposables);
 
             //servers export
@@ -208,7 +221,8 @@ public partial class ProfilesView
             return;
         }
 
-        var colName = ((MyDGTextColumn)colHeader.Column).ExName;
+        if (colHeader.Column is not MyDGTextColumn textColumn) return;
+        var colName = textColumn.ExName;
         ViewModel?.SortServer(colName);
     }
 
@@ -260,10 +274,6 @@ public partial class ProfilesView
         {
             switch (e.Key)
             {
-                case Key.Enter:
-                    //case Key.Return:
-                    ViewModel?.SetDefaultServer();
-                    break;
 
                 case Key.Delete:
                 case Key.Back:
@@ -329,11 +339,11 @@ public partial class ProfilesView
     {
         try
         {
-            var lvColumnItem = _config.UiItem.MainColumnItem.OrderBy(t => t.Index).ToList();
+            var lvColumnItem = _config.UiItem.MainColumnItem.OrderBy(t => t.Name == "DelayVal" ? 0 : 1).ThenBy(t => t.Index).ToList();
             var displayIndex = 0;
             foreach (var item in lvColumnItem)
             {
-                foreach (var item2 in lstProfiles.Columns.Cast<MyDGTextColumn>())
+                foreach (var item2 in lstProfiles.Columns.OfType<MyDGTextColumn>())
                 {
                     if (item2.ExName == item.Name)
                     {
@@ -357,6 +367,23 @@ public partial class ProfilesView
                     }
                 }
             }
+            var remarks = lstProfiles.Columns.OfType<MyDGTextColumn>().FirstOrDefault(c => c.ExName == "Remarks");
+            var psiphon = lstProfiles.Columns.FirstOrDefault(c => c.Header?.ToString() == "Psiphon");
+            var mode = lstProfiles.Columns.FirstOrDefault(c => c.Header?.ToString() == "Mode");
+            if (remarks is not null && psiphon is not null)
+            {
+                psiphon.Visibility = Visibility.Visible;
+                psiphon.DisplayIndex = remarks.DisplayIndex + 1;
+                if (mode is not null)
+                {
+                    var savedMode = _config.UiItem.MainColumnItem.FirstOrDefault(c => c.Name == "Mode");
+                    if (savedMode is { Width: >= 24 }) mode.Width = savedMode.Width;
+                    mode.Visibility = Visibility.Visible;
+                    mode.DisplayIndex = psiphon.DisplayIndex + 1;
+                }
+            }
+            var delay = lstProfiles.Columns.OfType<MyDGTextColumn>().FirstOrDefault(c => c.ExName == "DelayVal");
+            if (delay is not null) delay.DisplayIndex = 0;
         }
         catch (Exception ex)
         {
@@ -369,7 +396,7 @@ public partial class ProfilesView
         try
         {
             List<ColumnItem> lvColumnItem = [];
-            foreach (var item2 in lstProfiles.Columns.Cast<MyDGTextColumn>())
+            foreach (var item2 in lstProfiles.Columns.OfType<MyDGTextColumn>())
             {
                 lvColumnItem.Add(new()
                 {
@@ -378,6 +405,9 @@ public partial class ProfilesView
                     Index = item2.DisplayIndex
                 });
             }
+            var mode = lstProfiles.Columns.FirstOrDefault(c => c.Header?.ToString() == "Mode");
+            if (mode is not null)
+                lvColumnItem.Add(new ColumnItem { Name = "Mode", Width = (int)mode.ActualWidth, Index = mode.DisplayIndex });
             _config.UiItem.MainColumnItem = lvColumnItem;
         }
         catch (Exception ex)

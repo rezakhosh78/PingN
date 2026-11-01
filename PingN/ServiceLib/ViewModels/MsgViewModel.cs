@@ -100,9 +100,7 @@ public partial class MsgViewModel : MyReactiveObject
             ? msg
             : msg + Environment.NewLine;
 
-        var category = msg.StartsWith("Desync", StringComparison.OrdinalIgnoreCase) ? "Desync"
-            : msg.StartsWith("SNI Spoofing Plus", StringComparison.OrdinalIgnoreCase) ? "SNI Spoofing Plus"
-            : "Xray";
+        var category = RuntimeLogCategories.Detect(msg);
         EnqueueWithLimit((category, formattedMsg));
     }
 

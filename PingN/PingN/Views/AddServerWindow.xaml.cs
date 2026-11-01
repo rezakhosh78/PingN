@@ -9,6 +9,7 @@ public partial class AddServerWindow
         InitializeComponent();
 
         Loaded += Window_Loaded;
+        Closed += (_, _) => ViewModel?.CancelWarpKeyGeneration();
         cmbNetwork.SelectionChanged += CmbNetwork_SelectionChanged;
         cmbHeaderTypeRaw.SelectionChanged += CmbHeaderTypeRaw_SelectionChanged;
         cmbStreamSecurity.SelectionChanged += CmbStreamSecurity_SelectionChanged;
@@ -37,6 +38,9 @@ public partial class AddServerWindow
 
         this.WhenActivated(disposables =>
         {
+            this.Bind(ViewModel, vm => vm.PsiphonOver, v => v.togPsiphonOver.IsChecked).DisposeWith(disposables);
+            this.OneWayBind(ViewModel, vm => vm.PsiphonRegions, v => v.cmbPsiphonRegion.ItemsSource).DisposeWith(disposables);
+            this.Bind(ViewModel, vm => vm.SelectedPsiphonRegion, v => v.cmbPsiphonRegion.SelectedItem).DisposeWith(disposables);
             this.WhenAnyValue(v => v.ViewModel.SelectedSource)
                 .KeepNotNull()
                 .Subscribe(InitializeData)
@@ -370,6 +374,12 @@ public partial class AddServerWindow
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        if (ViewModel?.DnsTunnel is not null)
+        {
+            serverEditorScroll.Content = BuildDnsTunnelEditor();
+            return;
+        }
+        if (ViewModel?.IsWarpAmneziaProfile == true || ViewModel?.IsWarpMasqueProfile == true) AlignWarpLikeVless();
         txtRemarks.Focus();
     }
 
@@ -472,5 +482,176 @@ public partial class AddServerWindow
         gridTransportRawHttp.Visibility = showRawHttpFields
             ? Visibility.Visible
             : Visibility.Collapsed;
+    }
+
+    private StackPanel BuildDnsTunnelEditor()
+    {
+        var settings = ViewModel!.DnsTunnel!;
+        var panel = new StackPanel { Margin = new Thickness(8) };
+        panel.Children.Add(new TextBlock { Text = settings.Kind == "masterdns" ? "MasterDNS" : "DNSTT SSH", FontSize = 22, Margin = new Thickness(4) });
+        void Field(string name, string value, Action<string> changed, bool multiline = false, bool readOnly = false)
+        {
+            var row = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+            var label = new TextBlock { Text = name, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4) };
+            var box = new TextBox { Text = value, Margin = new Thickness(4), MinWidth = 0,
+                AcceptsReturn = multiline, IsReadOnly = readOnly, HorizontalAlignment = HorizontalAlignment.Stretch };
+            if (multiline) box.MinHeight = 90;
+            if (name == "SSH password" || name.StartsWith("Private key passphrase", StringComparison.Ordinal))
+            {
+                var password = new PasswordBox { Password = value, Margin = new Thickness(4), MinWidth = 0 };
+                password.PasswordChanged += (_, _) => changed(password.Password);
+                ArrangeEditorRow(row, label, password);
+                row.Children.Add(label); row.Children.Add(password); panel.Children.Add(row);
+                return;
+            }
+            box.TextChanged += (_, _) => changed(box.Text ?? string.Empty);
+            ArrangeEditorRow(row, label, box);
+            row.Children.Add(label); row.Children.Add(box); panel.Children.Add(row);
+        }
+        void Choice(string name, string value, IReadOnlyList<DnsFieldChoice> choices, Action<string> changed)
+        {
+            var row = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+            // Preserve newer/unknown upstream values rather than silently changing a saved profile.
+            var options = choices.ToList();
+            if (!options.Any(x => x.Value == value)) options.Add(new DnsFieldChoice(value, $"{value} (custom / newer core)"));
+            var combo = new ComboBox { ItemsSource = options, SelectedItem = options.First(x => x.Value == value),
+                MinWidth = 0, Margin = new Thickness(4), HorizontalAlignment = HorizontalAlignment.Stretch };
+            combo.SelectionChanged += (_, _) =>
+            {
+                if (combo.SelectedItem is DnsFieldChoice selected) changed(selected.Value);
+            };
+            var label = new TextBlock { Text = name, Margin = new Thickness(4), VerticalAlignment = VerticalAlignment.Center };
+            ArrangeEditorRow(row, label, combo);
+            row.Children.Add(label); row.Children.Add(combo); panel.Children.Add(row);
+        }
+        Field("Remarks", ViewModel.SelectedSource.Remarks, x => ViewModel.SelectedSource.Remarks = x);
+        Field("Local SOCKS port", ViewModel.SelectedSource.Port.ToString(), x => ViewModel.SelectedSource.Port = int.TryParse(x, out var port) ? port : 0);
+        if (settings.Kind == "masterdns")
+            foreach (var (key, value) in DnsTunnelCoreInstaller.InstalledMasterDefaults())
+                settings.MasterOptions.TryAdd(key, value);
+        if (settings.Kind == "masterdns")
+        {
+            Field("DNS resolvers (one per line)", settings.Resolvers, x => settings.Resolvers = x, true);
+            // Every setting shipped by the installed core becomes an editable row.
+            foreach (var (key, value) in settings.MasterOptions.ToList())
+            {
+                var managed = key is "PROTOCOL_TYPE" or "LISTEN_IP" or "LISTEN_PORT" or "SOCKS5_AUTH";
+                var displayed = key switch { "PROTOCOL_TYPE" => "\"SOCKS5\"", "LISTEN_IP" => "\"127.0.0.1\"",
+                    "LISTEN_PORT" => ViewModel.SelectedSource.Port.ToString(), "SOCKS5_AUTH" => "false", _ => value };
+                var choices = MasterDnsEditorSchema.Choices(key, displayed);
+                var label = MasterDnsEditorSchema.Label(key);
+                if (!managed && choices is not null)
+                    Choice(label, displayed, choices, x => settings.MasterOptions[key] = x);
+                else if (!managed && displayed.StartsWith("\""))
+                {
+                    // Plain strings are shown without TOML quotation marks and escaped on save.
+                    try
+                    {
+                        var plain = System.Text.Json.JsonSerializer.Deserialize<string>(displayed) ?? string.Empty;
+                        Field(label, plain, x => settings.MasterOptions[key] = System.Text.Json.JsonSerializer.Serialize(x));
+                    }
+                    catch (System.Text.Json.JsonException) { Field(label, displayed, x => settings.MasterOptions[key] = x); }
+                }
+                else Field(label, displayed, x => settings.MasterOptions[key] = x, false, managed);
+            }
+        }
+        else
+        {
+            Field("Tunnel domain", settings.Domain, x => settings.Domain = x.Trim());
+            Field("Server public key (hex)", settings.PublicKey, x => settings.PublicKey = x.Trim());
+            Choice("DNS transport", settings.Transport, new[] { new DnsFieldChoice("udp", "UDP DNS"),
+                new DnsFieldChoice("doh", "DNS over HTTPS (DoH)"), new DnsFieldChoice("dot", "DNS over TLS (DoT)") }, x => settings.Transport = x);
+            Field("Resolver: IP:port / HTTPS URL", settings.Resolver, x => settings.Resolver = x.Trim());
+            Field("Tunnel local TCP port", settings.TunnelPort, x => settings.TunnelPort = x.Trim());
+            Field("TLS fingerprint (uTLS)", settings.Utls, x => settings.Utls = x.Trim());
+            Field("SSH username", settings.SshUser, x => settings.SshUser = x);
+            Field("SSH password", settings.SshPassword, x => settings.SshPassword = x);
+            Field("SSH private key path (optional)", settings.PrivateKeyPath, x => settings.PrivateKeyPath = x);
+            Field("Private key passphrase (optional)", settings.PrivateKeyPassphrase, x => settings.PrivateKeyPassphrase = x);
+            Field("SSH host key (optional; auto-saved)", settings.HostKeySha256, x => settings.HostKeySha256 = x.Trim());
+            Field("SSH timeout (seconds)", settings.ConnectTimeoutSeconds, x => settings.ConnectTimeoutSeconds = x.Trim());
+            Field("SSH keepalive (seconds)", settings.KeepAliveSeconds, x => settings.KeepAliveSeconds = x.Trim());
+        }
+        return panel;
+    }
+
+    private double VlessLabelWidth()
+    {
+        var available = serverEditorScroll.ActualWidth;
+        if (available <= 0) available = Width - 48;
+        var reference = gridVLESS.ColumnDefinitions[0].Width.Value;
+        return Math.Min(reference > 0 ? reference : 300, Math.Max(120, available * 0.4));
+    }
+
+    private void ArrangeEditorRow(Grid row, TextBlock label, FrameworkElement input)
+    {
+        row.ColumnDefinitions.Clear(); row.RowDefinitions.Clear();
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(VlessLabelWidth()) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        label.HorizontalAlignment = HorizontalAlignment.Left;
+        label.TextAlignment = TextAlignment.Left;
+        label.TextWrapping = TextWrapping.Wrap;
+        label.VerticalAlignment = VerticalAlignment.Center;
+        input.HorizontalAlignment = HorizontalAlignment.Left;
+        input.MinWidth = 0;
+        if (input is TextBox text) text.Style = txtId5.Style;
+        if (input is ComboBox combo) combo.Style = cmbFlow5.Style;
+        label.Style = TryFindResource("ToolbarTextBlock") as Style;
+        Grid.SetRow(label, 0); Grid.SetColumn(label, 0);
+        Grid.SetRow(input, 0); Grid.SetColumn(input, 1);
+        void Resize()
+        {
+            var available = serverEditorScroll.ActualWidth;
+            if (available <= 0) available = Width - 48;
+            var labelWidth = VlessLabelWidth();
+            row.ColumnDefinitions[0].Width = new GridLength(labelWidth);
+            var preferred = input is ComboBox ? cmbFlow5.Width : txtId5.Width;
+            if (double.IsNaN(preferred) || preferred <= 0) preferred = input is ComboBox ? 200 : 400;
+            input.Width = Math.Max(40, Math.Min(preferred, available - labelWidth - 48));
+        }
+        Resize();
+        serverEditorScroll.SizeChanged += (_, _) => Resize();
+    }
+
+    private bool _warpLayoutConfigured;
+    private void AlignWarpLikeVless()
+    {
+        if (_warpLayoutConfigured) return;
+        cmbWarpAmneziaRegistrationProxy.ItemsSource = ViewModel!.WarpRegistrationProxies;
+        this.Bind(ViewModel, vm => vm.SelectedWarpRegistrationProxy, v => v.cmbWarpAmneziaRegistrationProxy.SelectedItem);
+        btnWarpAmneziaGenerateKey.Command = ViewModel.GenerateWarpKeyCmd;
+        this.OneWayBind(ViewModel, vm => vm.WarpKeyStatus, v => v.txtWarpAmneziaKeyStatus.Text);
+
+        cmbWarpMasqueRegistrationProxy.ItemsSource = ViewModel!.WarpRegistrationProxies;
+        this.Bind(ViewModel, vm => vm.SelectedWarpRegistrationProxy, v => v.cmbWarpMasqueRegistrationProxy.SelectedItem);
+        btnWarpMasqueGenerateKey.Command = ViewModel.GenerateWarpKeyCmd;
+        this.OneWayBind(ViewModel, vm => vm.WarpKeyStatus, v => v.txtWarpMasqueKeyStatus.Text);
+
+        _warpLayoutConfigured = true;
+        foreach (var grid in new[] { gridWarpAmnezia, gridWarpMasque })
+        {
+            if (grid.Children.OfType<StackPanel>().FirstOrDefault() is not { } fields) continue;
+            foreach (var row in fields.Children.OfType<Grid>())
+            {
+                var label = row.Children.OfType<TextBlock>().FirstOrDefault();
+                var input = row.Children.OfType<FrameworkElement>().FirstOrDefault(x => x is TextBox or ComboBox);
+                if (label is not null && input is not null) ArrangeEditorRow(row, label, input);
+            }
+        }
+        void AlignCommon()
+        {
+            var labelWidth = VlessLabelWidth();
+            gridBasic.ColumnDefinitions[0].Width = new GridLength(labelWidth);
+            var available = serverEditorScroll.ActualWidth;
+            if (available <= 0) available = Width - 48;
+            foreach (var input in new FrameworkElement[] { txtRemarks, txtAddress, txtPort, cmbCoreType })
+            {
+                input.HorizontalAlignment = HorizontalAlignment.Left;
+                input.Width = Math.Max(40, Math.Min(input is ComboBox ? 200 : 400, available - labelWidth - 24));
+            }
+            foreach (var label in gridBasic.Children.OfType<TextBlock>()) label.HorizontalAlignment = HorizontalAlignment.Left;
+        }
+        AlignCommon();
+        serverEditorScroll.SizeChanged += (_, _) => AlignCommon();
     }
 }

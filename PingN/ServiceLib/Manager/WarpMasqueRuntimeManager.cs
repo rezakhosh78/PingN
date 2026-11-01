@@ -155,7 +155,7 @@ public static class WarpMasqueRuntimeManager
         return Task.FromResult<WarpMasqueLaunchPlan?>(new WarpMasqueLaunchPlan(profile, runtimeDirectory));
     }
 
-    public static async Task StartAsync(WarpMasqueLaunchPlan? plan, Func<bool, string, Task>? updateFunc)
+    public static async Task StartAsync(WarpMasqueLaunchPlan? plan, Func<bool, string, Task>? updateFunc, CancellationToken cancellationToken = default)
     {
         if (plan is null)
             return;
@@ -163,9 +163,9 @@ public static class WarpMasqueRuntimeManager
         var profile = plan.Profile;
         var extra = profile.GetProtocolExtra();
         Directory.CreateDirectory(plan.RuntimeDirectory);
-        var executablePath = await ResolveExecutablePathAsync();
+        var executablePath = await ResolveExecutablePathAsync().WaitAsync(cancellationToken);
         var configPath = Path.Combine(plan.RuntimeDirectory, "config.json");
-        var configJson = await GetRegisteredConfigAsync(executablePath, plan.RuntimeDirectory, configPath, profile, updateFunc);
+        var configJson = await GetRegisteredConfigAsync(executablePath, plan.RuntimeDirectory, configPath, profile, updateFunc, cancellationToken: cancellationToken);
 
         var candidates = new List<Endpoint>();
         if (extra.WarpMasqueAutoScan == true)
@@ -173,7 +173,7 @@ public static class WarpMasqueRuntimeManager
             await Report(updateFunc, false, "WARP MASQUE/H2: scanning candidate endpoints...");
             try
             {
-                candidates.AddRange(await ScanEndpointsAsync(extra.WarpMasqueEndpointCandidates ?? DefaultCandidates));
+                candidates.AddRange(await ScanEndpointsAsync(extra.WarpMasqueEndpointCandidates ?? DefaultCandidates).WaitAsync(cancellationToken));
             }
             catch (Exception ex)
             {
@@ -190,14 +190,17 @@ public static class WarpMasqueRuntimeManager
         var lastError = string.Empty;
         foreach (var endpoint in connectCandidates)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             try
             {
                 var endpointConfig = PatchEndpoint(configJson, endpoint);
                 await File.WriteAllTextAsync(configPath, endpointConfig, new UTF8Encoding(false));
                 await Report(updateFunc, false, $"WARP MASQUE/H2: connecting to {endpoint.Rendered}...");
+                cancellationToken.ThrowIfCancellationRequested();
                 var process = StartCore(executablePath, configPath, plan.RuntimeDirectory, profile, endpoint);
                 _process = process;
-                if (await WaitForSocksTunnelAsync(process, profile.Port, ConnectTimeout))
+                using var registration = cancellationToken.Register(() => { try { if (!process.HasExited) process.Kill(true); } catch { } });
+                if (await WaitForSocksTunnelAsync(process, profile.Port, ConnectTimeout).WaitAsync(cancellationToken))
                 {
                     profile.SetProtocolExtra(profile.GetProtocolExtra() with
                     {
@@ -210,12 +213,18 @@ public static class WarpMasqueRuntimeManager
                     {
                         stored.SetProtocolExtra(profile.GetProtocolExtra());
                         await ConfigHandler.AddSocksServer(AppManager.Instance.Config, stored);
+                        BuiltinWarpManager.RegistrationUpdated.Publish();
                     }
                     _activeConfigPath = configPath;
                     await Report(updateFunc, false, $"WARP MASQUE/H2: connected through {endpoint.Rendered}.");
                     return;
                 }
                 lastError = await ReadProcessError(process);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                await StopProcessAsync();
+                throw;
             }
             catch (Exception ex)
             {
@@ -343,9 +352,23 @@ public static class WarpMasqueRuntimeManager
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
+    public static async Task<string> GenerateRegistrationAsync(ProfileItem profile, CancellationToken cancellationToken = default)
+    {
+        var directory = Path.Combine(Utils.GetConfigPath(), "WarpRegistration", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var clone = JsonUtils.DeepCopy(profile);
+            clone.SetProtocolExtra(clone.GetProtocolExtra() with { WarpMasqueConfigJson = null });
+            var executable = await ResolveExecutablePathAsync().WaitAsync(cancellationToken);
+            return await GetRegisteredConfigAsync(executable, directory, Path.Combine(directory, "config.json"), clone, null, false, cancellationToken);
+        }
+        finally { try { Directory.Delete(directory, true); } catch { } }
+    }
+
     private static async Task<string> GetRegisteredConfigAsync(
         string executablePath, string runtimeDirectory, string configPath, ProfileItem profile,
-        Func<bool, string, Task>? updateFunc)
+        Func<bool, string, Task>? updateFunc, bool persist = true, CancellationToken cancellationToken = default)
     {
         var existing = profile.GetProtocolExtra().WarpMasqueConfigJson?.Trim();
         if (!string.IsNullOrWhiteSpace(existing))
@@ -355,6 +378,14 @@ public static class WarpMasqueRuntimeManager
             return existing;
         }
 
+        return await WarpRegistrationCoordinator.RunAsync(profile.GetProtocolExtra().WarpRegistrationProxyId,
+            (url, token) => RegisterConfigAttemptAsync(executablePath, runtimeDirectory, configPath, profile, updateFunc, url, persist, token), cancellationToken);
+    }
+
+    private static async Task<string> RegisterConfigAttemptAsync(string executablePath, string runtimeDirectory,
+        string configPath, ProfileItem profile, Func<bool, string, Task>? updateFunc,
+        string? proxyUrl, bool persist, CancellationToken cancellationToken)
+    {
         await Report(updateFunc, false, "WARP MASQUE/H2: registering a WARP device...");
         if (File.Exists(configPath)) File.Delete(configPath);
         var startInfo = new ProcessStartInfo
@@ -370,14 +401,17 @@ public static class WarpMasqueRuntimeManager
         startInfo.ArgumentList.Add("-n");
         startInfo.ArgumentList.Add(profile.GetProtocolExtra().WarpMasqueDeviceName ?? "PingN");
         startInfo.ArgumentList.Add("--accept-tos");
+        WarpRegistrationProxySession.ApplyEnvironment(startInfo, proxyUrl);
         using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("The WARP MASQUE core did not start.");
         var stdoutTask = process.StandardOutput.ReadToEndAsync();
         var stderrTask = process.StandardError.ReadToEndAsync();
-        using var timeout = new CancellationTokenSource(RegisterTimeout);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(RegisterTimeout);
         try { await process.WaitForExitAsync(timeout.Token); }
         catch (OperationCanceledException)
         {
             try { process.Kill(entireProcessTree: true); } catch { }
+            cancellationToken.ThrowIfCancellationRequested();
             throw new TimeoutException("WARP MASQUE registration timed out.");
         }
         await Task.WhenAll(stdoutTask, stderrTask);
@@ -391,13 +425,14 @@ public static class WarpMasqueRuntimeManager
         var registered = await File.ReadAllTextAsync(configPath);
         ValidateRegisteredConfig(registered);
         profile.SetProtocolExtra(profile.GetProtocolExtra() with { WarpMasqueConfigJson = registered });
-        var stored = await AppManager.Instance.GetProfileItem(profile.IndexId);
+        var stored = persist ? await AppManager.Instance.GetProfileItem(profile.IndexId) : null;
         if (stored is not null)
         {
                         stored.Address = profile.Address;
                         stored.Port = profile.Port;
             stored.SetProtocolExtra(profile.GetProtocolExtra());
             await ConfigHandler.AddSocksServer(AppManager.Instance.Config, stored);
+            BuiltinWarpManager.RegistrationUpdated.Publish();
         }
         return registered;
     }

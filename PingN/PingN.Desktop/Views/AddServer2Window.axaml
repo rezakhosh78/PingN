@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dd="clr-namespace:PingN.Desktop.DesignData"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:ServiceLib.Models.Dto;assembly=ServiceLib"
     xmlns:resx="clr-namespace:ServiceLib.Resx;assembly=ServiceLib"
     xmlns:vms="clr-namespace:ServiceLib.ViewModels;assembly=ServiceLib"
     Title="{x:Static resx:ResUI.menuAddCustomServer}"
@@ -34,7 +35,7 @@
                 IsCancel="True" />
         </StackPanel>
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+            <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
 
                 <TextBlock
                     Grid.Row="0"
@@ -49,14 +50,16 @@
                     VerticalAlignment="Center"
                     Text="{x:Static resx:ResUI.TbRemarks}" />
 
-                <TextBox
+                <StackPanel Grid.Row="1" Grid.Column="1">
+<TextBox
                     x:Name="txtRemarks"
-                    Grid.Row="1"
-                    Grid.Column="1"
+                    
+                    
                     Width="400"
                     Margin="{StaticResource Margin4}"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center" />
+</StackPanel>
 
                 <TextBlock
                     Grid.Row="2"
@@ -200,12 +203,25 @@
                         TextWrapping="Wrap" />
                 </Grid>
 
+<GroupBox x:Name="grpPsiphon" Header="Psiphon Over" Grid.Row="6"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3">
+    <Grid ColumnDefinitions="230,*" RowDefinitions="Auto,Auto">
+        <TextBlock Grid.Row="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Enable Psiphon Over" />
+        <ToggleSwitch x:Name="togPsiphonOver" Grid.Row="0" Grid.Column="1" Margin="{StaticResource Margin4}" HorizontalAlignment="Left" />
+        <TextBlock Grid.Row="1" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Connection country" />
+        <ComboBox x:Name="cmbPsiphonRegion" Grid.Row="1" Grid.Column="1" Margin="{StaticResource Margin4}" HorizontalAlignment="Stretch" IsEnabled="{Binding PsiphonOver}">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="models:PsiphonRegionOption"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+    </Grid>
+</GroupBox>
+
                 <GroupBox
                     x:Name="grpPingNFeatures"
-                    Grid.Row="6"
+                    Grid.Row="7"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
-                    Header="PingN: Desync and SNI Spoofing"
+                    Header="Desync and SNI Spoofing"
                     IsVisible="{Binding IsPingNFeatureAvailable}">
                     <Grid ColumnDefinitions="230,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
                         <TextBlock Grid.Row="0" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Desync profile" TextAlignment="Left" />

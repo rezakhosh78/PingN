@@ -41,15 +41,8 @@ internal class AvaUtils
 
     public static WindowIcon GetAppIcon(ESysProxyType sysProxyType)
     {
-        var index = (int)sysProxyType + 1;
-        var fileName = Utils.GetPath($"NotifyIcon{index}.ico");
-        if (File.Exists(fileName))
-        {
-            return new(fileName);
-        }
-
-        var uri = new Uri(Path.Combine(Global.AvaAssets, $"NotifyIcon{index}.ico"));
-        using var bitmap = new Bitmap(AssetLoader.Open(uri));
-        return new(bitmap);
+        var name = sysProxyType == ESysProxyType.ForcedChange ? "PingNProxy.ico" : "PingN.ico";
+        using var stream = AssetLoader.Open(new Uri($"avares://PingNG/Assets/{name}"));
+        return new WindowIcon(stream);
     }
 }

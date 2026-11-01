@@ -82,7 +82,8 @@ public partial class StatusBarView
     private async Task RefreshIcon()
     {
         tbNotify.Icon = await WindowsManager.Instance.GetNotifyIcon(_config);
-        Application.Current.MainWindow?.Icon = WindowsManager.Instance.GetAppIcon(_config);
+        if (Application.Current.MainWindow is { } window)
+            window.Icon = WindowsManager.Instance.GetAppIcon(_config);
     }
 
     private async void menuExit_Click(object sender, RoutedEventArgs e)

@@ -3,6 +3,11 @@ name: release PingN.WebAPI
 on:
   workflow_call:
     inputs:
+      enable_riscv64:
+        description: 'Opt in to the experimental Linux RISC-V API build (requires a RISC-V runner).'
+        required: false
+        type: boolean
+        default: false
       release_tag:
         required: true
         type: string
@@ -11,6 +16,11 @@ on:
         required: false
   workflow_dispatch:
     inputs:
+      enable_riscv64:
+        description: 'Opt in to the experimental Linux RISC-V API build (requires a RISC-V runner).'
+        required: false
+        type: boolean
+        default: false
       release_tag:
         description: 'Release tag (for example 7.x.y).'
         required: true
@@ -27,6 +37,7 @@ jobs:
       contents: read
     with:
       release_tag: ${{ inputs.release_tag }}
+      enable_riscv64: ${{ inputs.enable_riscv64 }}
 
   release-web-packages:
     name: sign and upload Web API packages

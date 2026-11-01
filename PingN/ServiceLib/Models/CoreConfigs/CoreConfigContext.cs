@@ -2,6 +2,8 @@ namespace ServiceLib.Models.CoreConfigs;
 
 public record CoreConfigContext
 {
+    // Original selection remains stable when subscription chaining creates a temporary node.
+    public ProfileItem? SourceNode { get; init; }
     public required ProfileItem Node { get; init; }
     public required ECoreType RunCoreType { get; init; }
     public RoutingItem? RoutingItem { get; init; }

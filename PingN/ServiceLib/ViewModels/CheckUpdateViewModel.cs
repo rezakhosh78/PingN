@@ -58,6 +58,17 @@ public partial class CheckUpdateViewModel : MyReactiveObject
                         .ToList();
 
         models.Add(GetGeoFileCheckUpdateModel());
+        foreach (var kind in new[] { "masterdns", "dnstt-ssh" })
+        {
+            var label = kind == "masterdns" ? "MasterDNS Client" : "DNSTT Client";
+            models.Add(new CheckUpdateModel
+            {
+                DnsCoreKind = kind,
+                IsSelected = _config.CheckUpdateItem.SelectedCoreTypes?.Contains(label) ?? true,
+                ShowCheckPreRelease = false,
+                Remarks = DnsTunnelCoreInstaller.InstalledVersion(kind),
+            });
+        }
 
         CheckUpdateModels.ReplaceRange(models);
     }
@@ -149,6 +160,11 @@ public partial class CheckUpdateViewModel : MyReactiveObject
                 continue;
             }
 
+            if (item.DnsCoreKind is not null)
+            {
+                await CheckDnsCore(item, true);
+                continue;
+            }
             await UpdateView(item.CoreType, "...");
 
             if (item.IsGeoFile || item.CoreType == null)
@@ -180,7 +196,7 @@ public partial class CheckUpdateViewModel : MyReactiveObject
     {
         _lstUpdated.Clear();
         _lstUpdated = CheckUpdateModels
-            .Where(x => x.IsSelected == true)
+            .Where(x => x.IsSelected == true && x.DnsCoreKind is null)
             .Select(x => new CheckUpdateModel()
             {
                 CoreType = x.CoreType,
@@ -197,6 +213,11 @@ public partial class CheckUpdateViewModel : MyReactiveObject
                 continue;
             }
 
+            if (item.DnsCoreKind is not null)
+            {
+                await CheckDnsCore(item, false);
+                continue;
+            }
             await UpdateView(item.CoreType, "...");
 
             if (item.IsGeoFile)
@@ -219,6 +240,30 @@ public partial class CheckUpdateViewModel : MyReactiveObject
         }
 
         await UpdateFinished();
+    }
+
+    private static async Task CheckDnsCore(CheckUpdateModel item, bool checkOnly)
+    {
+        void Status(string message) => RxSchedulers.MainThreadScheduler.Schedule(() => item.Remarks = message);
+        Status(checkOnly ? "Checking client version..." : "Checking / updating client...");
+        try
+        {
+            if (checkOnly)
+            {
+                var result = await DnsTunnelCoreInstaller.CheckOnlyAsync(item.DnsCoreKind!);
+                Status(result.HasUpdate ? $"Client update available: {result.Version}" : $"Client is up to date: {result.Version}");
+            }
+            else
+            {
+                await DnsTunnelCoreInstaller.UpdateAsync(item.DnsCoreKind!);
+                Status(DnsTunnelCoreInstaller.InstalledVersion(item.DnsCoreKind!) + "; installed / up to date");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog("DNS client update", ex);
+            Status(ex.Message);
+        }
     }
 
     private void UpdatedPlusPlus(ECoreType? coreType, string fileName)
