@@ -1,24 +1,24 @@
 <p align="center">
-  <img src="PingN/PingN.Desktop/PingN.png" width="112" alt="لوگوی PingN">
+  <img src="PingN/PingN.Desktop/PingN.png" width="112" alt="PingN logo">
 </p>
 
 <h1 align="center">PingN</h1>
 
-<p align="center">🛡️ کلاینت پراکسی دسکتاپ بر پایهٔ V2rayN، همراه با Cloudflare WARP، Desync و SNI Spoofing Plus</p>
-<p align="center">🚀 نسخهٔ منبع فعلی: <code>v7.25.6-PiN52</code></p>
-<p align="center"><a href="README.md">English</a> · <a href="README.fa.md">فارسی</a></p>
+<p align="center">🛡️ A v2rayN-based desktop proxy client with Cloudflare WARP, Desync, and SNI Spoofing Plus.</p>
+<p align="center">🚀 Current source build: <code>v7.25.6-PiN52</code></p>
+<p align="center"><a href="README.fa.md">فارسی</a> · <a href="README.md">English</a></p>
 
 ---
 
-## ✨ دربارهٔ PingN
+## ✨ About PingN
 
-**PingN** یک کلاینت پراکسی دسکتاپ بر پایهٔ پروژهٔ متن‌باز **v2rayN** است. مدیریت پروفایل و اشتراک، مسیریابی، DNS، پروکسی سیستم و TUN را حفظ می‌کند و ابزارهای اختصاصی Cloudflare WARP و اتصال را به آن اضافه می‌کند.
+**PingN** is a desktop proxy client based on the open-source **v2rayN** project. It keeps the familiar profile, subscription, routing, DNS, system proxy, and TUN workflow, then adds dedicated Cloudflare WARP and connection tools.
 
-🧩 در نخستین اجرا، PingN یک اشتراک با نام **WARP** می‌سازد و پروفایل‌های **WARP MASQUE/H2** و **WARP AmneziaWG** را در آن قرار می‌دهد. اطلاعات ثبت یا کلید ذخیره‌شدهٔ این دو قابلیت در اتصال‌های بعدی دوباره استفاده می‌شود؛ فشردن **Enter** روی پروفایل WARP انتخاب‌شده، اتصال یا قطع آن را تغییر می‌دهد.
+🧩 On first launch, PingN creates a **WARP** subscription with **WARP MASQUE/H2** and **WARP AmneziaWG** profiles. Their saved registration credentials or keys are reused on reconnect; pressing **Enter** on a selected WARP profile toggles its connection on or off.
 
-⚡ در حالت **Auto** ابتدا اتصال مستقیم امتحان می‌شود و پس از ۸ ثانیه، در صورت نیاز اتصال از مسیر **Proxy-1** دوباره تلاش می‌شود.
+⚡ **Auto** tries a direct connection first, then retries through **Proxy-1** after 8 seconds.
 
-## 💖 حمایت
+## 💖 Support
 
 **TRON:**  
 TUnX9wBWzhD2AK9GqB9FJekKaxCvYJNh18
@@ -26,64 +26,64 @@ TUnX9wBWzhD2AK9GqB9FJekKaxCvYJNh18
 **Nowpayments:**  
 https://nowpayments.io/donation/pingplas
 
-## 📊 مقایسهٔ PingN و V2rayN
+## 📊 PingN compared with V2rayN
 
-ستون V2rayN به کد دسکتاپ بالادستی‌ای اشاره دارد که PingN از آن منشعب شده است؛ این جدول دربارهٔ قابلیت‌هایی که ممکن است در نسخه‌های جدیدتر V2rayN اضافه شده باشند ادعایی ندارد.
+The V2rayN column refers to the upstream desktop code used as PingN’s base. It does not describe features that may have appeared in later V2rayN releases.
 
-| قابلیت | نسخهٔ پایهٔ V2rayN | PingN |
+| Feature | Upstream V2rayN base | PingN |
 | --- | --- | --- |
-| مدیریت پروفایل و اشتراک | ✅ | ✅ |
-| مسیریابی، DNS، پروکسی سیستم و TUN | ✅ | ✅ |
-| هسته‌های Xray و sing-box | ✅ | ✅ |
-| ساخت پروفایل‌های WARP | ❌ | ✅ |
+| Profiles and subscriptions | ✅ | ✅ |
+| Routing, DNS, system proxy, and TUN | ✅ | ✅ |
+| Xray and sing-box cores | ✅ | ✅ |
+| WARP profile setup | ❌ | ✅ |
 | WARP AmneziaWG | ❌ | ✅ |
 | WARP MASQUE/H2 | ❌ | ✅ |
-| اتصال خودکار | ❌ | ✅ |
+| Auto connection | ❌ | ✅ |
 | Desync | ❌ | ✅ |
 | SNI Spoofing Plus | ❌ | ✅ |
 
-## 💻 سیستم‌عامل‌های پشتیبانی‌شده
+## 💻 Supported platforms
 
-| سیستم‌عامل | معماری‌ها |
+| Platform | Architectures |
 | --- | --- |
-| 🪟 Windows | x64، x86، ARM64 |
-| 🐧 Linux | x64، ARM64، riscv64، loong64 |
-| 🍎 macOS | x64، ARM64 |
+| 🪟 Windows | x64, x86, ARM64 |
+| 🐧 Linux | x64, ARM64, riscv64, loong64 |
+| 🍎 macOS | x64, ARM64 |
 
-قابلیت‌های افزوده‌شدهٔ PingN محدودیت پشتیبانی دارند:
+PingN’s added integrations have narrower support:
 
-| 🔧 قابلیت PingN | سیستم‌عامل‌های پشتیبانی‌شده |
+| 🔧 PingN integration | Supported platforms |
 | --- | --- |
 | 🛡️ WARP AmneziaWG | Windows x64 |
-| 🌐 WARP MASQUE/H2 | Windows x64 و ARM64 |
+| 🌐 WARP MASQUE/H2 | Windows x64 and ARM64 |
 | 🌀 Desync | Windows x64 |
 | 🎭 SNI Spoofing Plus | Windows x64 |
 
-⚠️ قابلیت‌های Desync و SNI Spoofing Plus از WinDivert استفاده می‌کنند و هنگام اجرا درخواست تأیید Administrator ویندوز می‌دهند. SNI Spoofing Plus برای TLS معمولی روی TCP است و از Reality، MASQUE، WARP WireGuard یا پروفایل‌های بدون TLS پشتیبانی نمی‌کند.
+⚠️ Desync and SNI Spoofing Plus use WinDivert and request Windows Administrator approval when started. SNI Spoofing Plus applies to standard TLS over TCP; it does not support Reality, MASQUE, WARP WireGuard, or non-TLS profiles.
 
-## 📥 دریافت برنامه
+## 📥 Downloads
 
-بستهٔ متناسب با سیستم‌عامل و معماری خود را از بخش **Releases** همین مخزن دریافت کنید. فایل‌های انتشار امضا می‌شوند و کلید عمومی و امضاهای جداگانهٔ GPG همراه انتشار قرار می‌گیرند.
+Download the package for your operating system and architecture from this repository’s **Releases** page. Release assets are signed; the release includes the public key and detached GPG signatures.
 
-## 📜 مجوز
+## 📜 License
 
-سورس اصلی PingN با مجوز [GPL-3.0](LICENSE) منتشر شده است. اجزای همراه مجوزها و اعلان‌های خودشان را دارند؛ پوشهٔ <code>third_party/licenses/</code> و اعلان کنار هر جزء را ببینید.
+PingN’s main source is licensed under [GPL-3.0](LICENSE). Bundled components keep their own licenses and notices; see <code>third_party/licenses/</code> and the notices beside each component.
 
-PingN پروژه‌ای مستقل و مبتنی بر V2rayN است و نسخهٔ رسمی V2rayN نیست. PingNG پروژهٔ جداگانهٔ اندروید است.
+PingN is an independent project based on v2rayN and is not an official v2rayN release. PingNG is the separate Android client.
 
-## 🧰 پروژه‌های استفاده‌شده
+## 🧰 Projects used
 
-| پروژه | کاربرد در PingN |
+| Project | Use in PingN |
 | --- | --- |
-| [2dust/v2rayN](https://github.com/2dust/v2rayN) | پایهٔ کلاینت دسکتاپ و امکانات مدیریت پروفایل، مسیریابی و هسته‌ها. |
-| [XTLS/Xray-core](https://github.com/XTLS/Xray-core) | هستهٔ پراکسی پشتیبانی‌شده. |
-| [SagerNet/sing-box](https://github.com/SagerNet/sing-box) | هستهٔ پراکسی پشتیبانی‌شده. |
-| [oberon-core/oberon](https://github.com/oberon-core/oberon) و [AmneziaWG](https://github.com/amnezia-vpn/amneziawg-go) | ساخت پروفایل WARP AmneziaWG، اسکن اندپوینت و اجرای پراکسی محلی. |
-| [Diniboy1123/usque](https://github.com/Diniboy1123/usque) | هستهٔ WARP MASQUE/H2. |
-| [rezakhosh78/BlackHole](https://github.com/rezakhosh78/BlackHole) و [bol-van/zapret2](https://github.com/bol-van/zapret2) | منبع فایل‌های اجرایی Desync ویندوز؛ سورس برنامه و رابط گرافیکی BlackHole در PingN کپی نشده است. |
-| [aleskxyz/sni-spoofing-go](https://github.com/aleskxyz/sni-spoofing-go) | ابزار خط فرمان یکپارچه‌شده با SNI Spoofing Plus. |
-| [basil00/WinDivert](https://github.com/basil00/WinDivert) | درایور هدایت بسته‌های شبکه برای ابزارهای Desync و SNI در ویندوز. |
-| [vernette/warpscout](https://github.com/vernette/warpscout) | فهرست محدوده‌های IPv4 و IPv6 مورد استفادهٔ اسکنر Oberon. |
-| [Avalonia UI](https://github.com/AvaloniaUI/Avalonia)، [Semi.Avalonia](https://github.com/irihitech/Semi.Avalonia) و [ReactiveUI](https://github.com/reactiveui/ReactiveUI) | چارچوب و اجزای رابط کاربری دسکتاپ چندسکویی. |
-| [Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat)، [2dust/sing-box-rules](https://github.com/2dust/sing-box-rules) و [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat) | قوانین مسیریابی و داده‌های GeoIP/geosite. |
-| [rezakhosh78/PingNG](https://github.com/rezakhosh78/PingNG) | مرجع رفتار WARP در نسخهٔ موبایل؛ سورس برنامهٔ PingNG در PingN کپی نشده است. |
+| [2dust/v2rayN](https://github.com/2dust/v2rayN) | Desktop client foundation and inherited profile, routing, and core-management features. |
+| [XTLS/Xray-core](https://github.com/XTLS/Xray-core) | Supported proxy core. |
+| [SagerNet/sing-box](https://github.com/SagerNet/sing-box) | Supported proxy core. |
+| [oberon-core/oberon](https://github.com/oberon-core/oberon) and [AmneziaWG](https://github.com/amnezia-vpn/amneziawg-go) | WARP AmneziaWG profile creation, endpoint scanning, and local proxy runtime. |
+| [Diniboy1123/usque](https://github.com/Diniboy1123/usque) | WARP MASQUE/H2 runtime. |
+| [rezakhosh78/BlackHole](https://github.com/rezakhosh78/BlackHole) and [bol-van/zapret2](https://github.com/bol-van/zapret2) | Source of bundled Windows Desync runtime files. BlackHole’s GUI and application source are not copied into PingN. |
+| [aleskxyz/sni-spoofing-go](https://github.com/aleskxyz/sni-spoofing-go) | CLI used by the SNI Spoofing Plus integration. |
+| [basil00/WinDivert](https://github.com/basil00/WinDivert) | Packet-diversion driver used by the Windows Desync and SNI tools. |
+| [vernette/warpscout](https://github.com/vernette/warpscout) | WARP IPv4 and IPv6 endpoint-pool definitions used by Oberon’s scanner. |
+| [Avalonia UI](https://github.com/AvaloniaUI/Avalonia), [Semi.Avalonia](https://github.com/irihitech/Semi.Avalonia), and [ReactiveUI](https://github.com/reactiveui/ReactiveUI) | Cross-platform desktop UI framework and components. |
+| [Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat), [2dust/sing-box-rules](https://github.com/2dust/sing-box-rules), and [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat) | Routing rules and GeoIP/geosite data. |
+| [rezakhosh78/PingNG](https://github.com/rezakhosh78/PingNG) | WARP behavior reference for the mobile client; PingNG app source is not copied into PingN. |
