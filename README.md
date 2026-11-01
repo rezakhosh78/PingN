@@ -5,8 +5,15 @@
 <h1 align="center">PingN</h1>
 
 <p align="center">🛡️ A v2rayN-based desktop proxy client with Cloudflare WARP, Desync, and SNI Spoofing Plus.</p>
-<p align="center">🚀 Current source build: <code>v7.25.6-PiN52</code></p>
 <p align="center"><a href="README.fa.md">فارسی</a> · <a href="README.md">English</a></p>
+
+![Desync](https://img.shields.io/badge/Desync-Native-0066CC)
+![Psiphon](https://img.shields.io/badge/Psiphon-Supported-4177B6)
+![Tor](https://img.shields.io/badge/Tor-Supported-7D4698)
+![WARP](https://img.shields.io/badge/WARP-Supported-F38020)
+![DNSTT](https://img.shields.io/badge/DNSTT-Supported-6554C0)
+![MasterDNS](https://img.shields.io/badge/MasterDNS-Supported-009688)
+[![Xray](https://img.shields.io/github/v/release/XTLS/Xray-core?label=Xray-core&color=blue)](https://github.com/XTLS/Xray-core/releases/latest)
 
 ---
 
@@ -38,6 +45,9 @@ The V2rayN column refers to the upstream desktop code used as PingN’s base. It
 | WARP profile setup | ❌ | ✅ |
 | WARP AmneziaWG | ❌ | ✅ |
 | WARP MASQUE/H2 | ❌ | ✅ |
+| Psiphon Over | ❌ | ✅ |
+| DNSTT | ❌ | ✅ |
+| MasterDNS | ❌ | ✅ |
 | Auto connection | ❌ | ✅ |
 | Desync | ❌ | ✅ |
 | SNI Spoofing Plus | ❌ | ✅ |
