@@ -254,7 +254,15 @@ public partial class AddServerWindow
         var warpProfileType = profileItem.GetProtocolExtra().WarpProfileType;
         var isWarpAmnezia = string.Equals(warpProfileType, OberonRuntimeManager.WarpProfileType, StringComparison.OrdinalIgnoreCase);
         var isWarpMasque = string.Equals(warpProfileType, WarpMasqueRuntimeManager.WarpProfileType, StringComparison.OrdinalIgnoreCase);
-        Title = isWarpAmnezia ? "WARP AmneziaWG" : isWarpMasque ? WarpMasqueRuntimeManager.Description : $"{profileItem.ConfigType}";
+        var dnsTunnelTitle = profileItem.GetProtocolExtra().DnsTunnel?.Kind switch
+        {
+            "masterdns" => "MasterDNS",
+            "dnstt-ssh" => "DNSTT",
+            _ => null,
+        };
+        Title = isWarpAmnezia ? "WARP AmneziaWG"
+            : isWarpMasque ? WarpMasqueRuntimeManager.Description
+            : dnsTunnelTitle ?? $"{profileItem.ConfigType}";
         var lstStreamSecurity = new List<string> { string.Empty, Global.StreamSecurity };
         switch (profileItem.ConfigType)
         {

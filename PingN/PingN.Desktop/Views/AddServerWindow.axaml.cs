@@ -295,7 +295,15 @@ public partial class AddServerWindow : WindowBase<AddServerViewModel>
             profileItem.GetProtocolExtra().WarpProfileType,
             WarpMasqueRuntimeManager.WarpProfileType,
             StringComparison.OrdinalIgnoreCase);
-        Title = isWarpAmnezia ? "WARP AmneziaWG" : isWarpMasque ? WarpMasqueRuntimeManager.Description : $"{profileItem.ConfigType}";
+        var dnsTunnelTitle = profileItem.GetProtocolExtra().DnsTunnel?.Kind switch
+        {
+            "masterdns" => "MasterDNS",
+            "dnstt-ssh" => "DNSTT",
+            _ => null,
+        };
+        Title = isWarpAmnezia ? "WARP AmneziaWG"
+            : isWarpMasque ? WarpMasqueRuntimeManager.Description
+            : dnsTunnelTitle ?? $"{profileItem.ConfigType}";
         tbServerType.Text = Title;
         var lstStreamSecurity = new List<string> { string.Empty, Global.StreamSecurity };
         switch (profileItem.ConfigType)
