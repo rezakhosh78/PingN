@@ -49,11 +49,31 @@ jobs:
         name: ${{ matrix.arch }}
         path: PingN-${{ env.Target }}-${{ env.Arch }}
     
-    - name: Get core bundle
-      run: wget -nv -O "PingN-$Target-$Arch.zip" "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/master/v2rayN-$Target-$Arch.zip"
-    
+    - name: Download and merge core bundle
+      shell: bash
+      run: |
+        set -euo pipefail
+        core_archive="$RUNNER_TEMP/v2rayN-$Target-$Arch-core.zip"
+        core_extract="$RUNNER_TEMP/v2rayN-$Target-$Arch-core"
+        core_bin="$core_extract/v2rayN-$Target-$Arch/bin"
+        target_bin="PingN-$Target-$Arch/bin"
+
+        wget -nv -O "$core_archive" "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/master/v2rayN-$Target-$Arch.zip"
+        7z x -y "$core_archive" "-o$core_extract" >/dev/null
+        if [[ ! -d "$core_bin" ]]; then
+          echo "::error::Core bundle is missing its expected bin directory: $core_bin"
+          exit 1
+        fi
+        mkdir -p "$target_bin"
+        cp -a "$core_bin/." "$target_bin/"
+
     - name: Package zip archive
-      run: 7z a -tZip PingN-$Target-$Arch.zip PingN-$Target-$Arch -mx1
+      shell: bash
+      run: |
+        set -euo pipefail
+        archive="PingN-$Target-$Arch.zip"
+        rm -f "$archive"
+        7z a -tZip "$archive" "PingN-$Target-$Arch" -mx1
 
     - name: Rename windows-desktop 
       if: inputs.target == 'windows-desktop'

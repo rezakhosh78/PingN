@@ -74,10 +74,11 @@ public sealed class WarpRegistrationProxySession : IAsyncDisposable
             session._process = new ProcessService(executable, string.Format(core.Arguments, path.AppendQuotes()), Utils.GetBinConfigPath(), true, false, environment,
                 (isError, message) =>
                 {
-                    session._output.Enqueue(message.Trim());
+                    var safeMessage = Logging.RedactPrivateHost(message.Trim());
+                    session._output.Enqueue(safeMessage);
                     while (session._output.Count > 30) session._output.TryDequeue(out _);
-                    Logging.SaveLog($"WARP registration proxy: {message}");
-                    NoticeManager.Instance.SendMessage($"[WARP Registration Proxy] {message}");
+                    Logging.SaveLog($"WARP registration proxy: {safeMessage}");
+                    NoticeManager.Instance.SendMessage($"[WARP Registration Proxy] {safeMessage}");
                     return Task.CompletedTask;
                 });
             await session._process.StartAsync();

@@ -8,6 +8,10 @@ public class Logging
 {
     private static readonly Logger _logger1 = LogManager.GetLogger("Log1");
     private static readonly Logger _logger2 = LogManager.GetLogger("Log2");
+    private const string PrivateRegistrationHost = "pingng.novintech.site";
+
+    public static string RedactPrivateHost(string message) =>
+        message.Replace(PrivateRegistrationHost, "[registration host]", StringComparison.OrdinalIgnoreCase);
 
     public static void Setup()
     {
@@ -35,7 +39,7 @@ public class Logging
             return;
         }
 
-        _logger1.Info(strContent);
+        _logger1.Info(RedactPrivateHost(strContent));
     }
 
     public static void SaveLog(string strTitle, Exception ex)
@@ -45,6 +49,6 @@ public class Logging
             return;
         }
 
-        _logger2.Error($"{strTitle}{Environment.NewLine}{ex}");
+        _logger2.Error(RedactPrivateHost($"{strTitle}{Environment.NewLine}{ex}"));
     }
 }
