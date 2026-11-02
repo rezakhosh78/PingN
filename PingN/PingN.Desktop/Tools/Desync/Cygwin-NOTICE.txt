@@ -1,1 +1,0 @@
-The bundled cygwin1.dll comes from the Cygwin runtime. Cygwin's API library is licensed under LGPL-3.0-or-later with a linking exception. The LGPL text is in Cygwin-LGPL-3.0.txt; Cygwin-GPL-3.0.txt is retained from the BlackHole runtime bundle. Source and current licensing information: https://cygwin.com/licensing.html
