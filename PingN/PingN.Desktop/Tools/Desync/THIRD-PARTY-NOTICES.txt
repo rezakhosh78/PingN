@@ -1,0 +1,18 @@
+Desync runtime provenance and licenses
+======================================
+
+Bundled files were copied from the Windows x64 Desync runtime in:
+https://github.com/rezakhosh78/BlackHole
+BlackHole manifest version: 0.2.9
+BlackHole Desync bundle commit: 5b8b17f7b47894ca0b523de1da1806161a52d061
+
+winws2.exe and the Lua engine files are from zapret2 by bol-van and are
+licensed under MIT. See Zapret2-MIT-LICENSE.txt and
+https://github.com/bol-van/zapret2.
+
+cygwin1.dll is from the Cygwin runtime. Cygwin's API library is distributed
+under LGPL-3.0-or-later with its linking exception. See Cygwin-LGPL-3.0.txt,
+Cygwin-GPL-3.0.txt, and https://cygwin.com/licensing.html.
+
+WinDivert.dll and WinDivert64.sys are distributed under the WinDivert
+license terms. See WinDivert-LICENSE.txt and https://github.com/basil00/WinDivert.
