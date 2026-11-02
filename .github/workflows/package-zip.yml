@@ -1,0 +1,105 @@
+name: package and release Zip
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        required: true
+        type: string
+      target: # windows linux macos windows-desktop
+        required: true
+        type: string
+    secrets:
+      GPG_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  package:
+    name: package x64 arm64
+    strategy:
+      matrix:
+        arch: [ x64, arm64 ]
+    runs-on: ubuntu-latest
+    env:
+      Target: |-
+        ${{
+          case(
+            inputs.target == 'windows-desktop', 'windows',
+            inputs.target
+          )
+        }}
+      Arch: |-
+        ${{
+          case(
+            matrix.arch == 'x64', '64',
+            matrix.arch
+          )
+        }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    - name: Restore build artifacts
+      uses: actions/download-artifact@v8
+      with:
+        name: ${{ matrix.arch }}
+        path: PingN-${{ env.Target }}-${{ env.Arch }}
+
+    - name: Get and merge core bundle
+      shell: bash
+      run: |
+        set -euo pipefail
+        bundle="$RUNNER_TEMP/v2rayn-core-bundle.zip"
+        extracted="$RUNNER_TEMP/v2rayn-core-extracted"
+        package_dir="PingN-$Target-$Arch"
+
+        # Keep the upstream archive separate from the final PingN archive.
+        # This prevents the upstream v2rayN root folder from being shipped.
+        wget -nv -O "$bundle" "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/master/v2rayN-$Target-$Arch.zip"
+        mkdir -p "$extracted" "$package_dir"
+        unzip -q "$bundle" -d "$extracted"
+
+        upstream_dir="$extracted/v2rayN-$Target-$Arch"
+        if [[ ! -d "$upstream_dir" ]]; then
+          upstream_dir="$extracted"
+        fi
+
+        # Merge core payload into the PingN package root, not a second folder.
+        cp -a "$upstream_dir"/. "$package_dir"/
+
+    - name: Package zip archive
+      shell: bash
+      run: |
+        set -euo pipefail
+        archive="PingN-$Target-$Arch.zip"
+        rm -f "$archive"
+        7z a -tZip "$archive" "PingN-$Target-$Arch" -mx1
+
+    - name: Rename windows-desktop
+      if: inputs.target == 'windows-desktop'
+      run: mv "PingN-$Target-$Arch.zip" "PingN-$Target-$Arch-desktop.zip"
+
+    - name: Upload zip artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: release-${{ inputs.target }}-${{ matrix.arch }}
+        path: PingN*.zip
+        if-no-files-found: error
+
+  release:
+    name: sign and upload zip x64 arm64
+    needs: package
+    strategy:
+      matrix:
+        arch: [ x64, arm64 ]
+    uses: ./.github/workflows/upload-sign.yml
+    with:
+      release_tag: ${{ inputs.release_tag }}
+      artifact_name: release-${{ inputs.target }}-${{ matrix.arch }}
+      file_pattern: '*.zip'
+    secrets:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
