@@ -874,6 +874,15 @@ jobs:
         with:
           persist-credentials: false
       - uses: docker/setup-buildx-action@v3
+      - name: Validate lowercase API container tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_tag='pingn-webapi:ci'
+          if [[ "$image_tag" =~ [A-Z] ]]; then
+            echo "Docker image repository must be lowercase: $image_tag" >&2
+            exit 1
+          fi
       - name: Build API container (no push)
         uses: docker/build-push-action@v6
         env:

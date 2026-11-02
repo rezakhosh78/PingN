@@ -178,4 +178,3 @@ When reporting an issue, include the OS, architecture, Oberon version, command u
 ## 📜 License and notices
 
 Oberon is distributed under the GNU Affero General Public License v3.0 only (`AGPL-3.0-only`). If you run a modified version as a network service, AGPL requires offering its Corresponding Source to users interacting with it remotely. Source files with separate copyright or SPDX notices remain subject to those notices. Oberon's name and branding are covered by `TRADEMARK.md`.
-

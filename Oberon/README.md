@@ -159,4 +159,3 @@ When reporting an issue, include the OS, architecture, Oberon version, command u
 ## 📜 License and notices
 
 Oberon is distributed under the MIT License. The project license keeps the original WireGuard copyright notice, and upstream notices in source files remain in effect. See `LICENSE` for the terms and `UPSTREAM_README.md` for AmneziaWG background.
-

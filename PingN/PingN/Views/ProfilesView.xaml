@@ -367,7 +367,7 @@
                         Binding="{Binding SubRemarks}"
                         ExName="SubRemarks"
                         Header="{x:Static resx:ResUI.LvSubscription}" />
-                    
+
                     <base:MyDGTextColumn
                         Width="100"
                         Binding="{Binding SpeedVal}"

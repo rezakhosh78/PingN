@@ -87,7 +87,7 @@
                         Orientation="Vertical">
                         <ComboBox
                             x:Name="cmbCoreType"
-                           
+
                             Margin="{StaticResource Margin4}"
                             materialDesign:HintAssist.Hint="{x:Static resx:ResUI.TbCoreType}"
                             Style="{StaticResource DefComboBox}" />
@@ -103,9 +103,9 @@
                     <StackPanel Grid.Row="1" Grid.Column="1">
 <TextBox
                         x:Name="txtRemarks"
-                        
-                        
-                       
+
+
+
                         Margin="{StaticResource Margin4}"
                         Style="{StaticResource DefTextBox}" />
 </StackPanel>
@@ -122,7 +122,7 @@
                         x:Name="txtAddress"
                         Grid.Row="2"
                         Grid.Column="1"
-                       
+
                         Margin="{StaticResource Margin4}"
                         Style="{StaticResource DefTextBox}" />
 
@@ -138,7 +138,7 @@
                         x:Name="txtPort"
                         Grid.Row="3"
                         Grid.Column="1"
-                       
+
                         Margin="{StaticResource Margin4}"
                         HorizontalAlignment="Stretch"
                         Style="{StaticResource DefTextBox}" />

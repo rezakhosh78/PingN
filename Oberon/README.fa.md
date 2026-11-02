@@ -158,4 +158,3 @@ bash ./scripts/build-matrix.sh ./dist
 ## 📜 مجوز و اعلان‌ها
 
 Oberon با مجوز MIT منتشر می‌شود. فایل مجوز، حق‌نشر اصلی WireGuard را حفظ می‌کند و اعلان‌های upstream در فایل‌های سورس نیز معتبر می‌مانند. متن مجوز در `LICENSE` و توضیحات پروژهٔ AmneziaWG در `UPSTREAM_README.md` قرار دارد.
-

@@ -53,8 +53,8 @@
                 <StackPanel Grid.Row="1" Grid.Column="1">
 <TextBox
                     x:Name="txtRemarks"
-                    
-                    
+
+
                     Width="400"
                     Margin="{StaticResource Margin4}"
                     HorizontalAlignment="Left"

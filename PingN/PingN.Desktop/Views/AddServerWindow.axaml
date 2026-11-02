@@ -57,7 +57,7 @@
                         Orientation="Vertical">
                         <ComboBox
                             x:Name="cmbCoreType"
-                           
+
                             Margin="{StaticResource Margin4}"
                             ToolTip.Tip="{x:Static resx:ResUI.TbCoreType}" />
                     </StackPanel>
@@ -71,9 +71,9 @@
                     <StackPanel Grid.Row="1" Grid.Column="1">
 <TextBox
                         x:Name="txtRemarks"
-                        
-                        
-                       
+
+
+
                         Margin="{StaticResource Margin4}" />
 </StackPanel>
 
@@ -88,7 +88,7 @@
                         x:Name="txtAddress"
                         Grid.Row="2"
                         Grid.Column="1"
-                       
+
                         Margin="{StaticResource Margin4}" />
 
                     <TextBlock HorizontalAlignment="Right" TextWrapping="Wrap"
@@ -102,7 +102,7 @@
                         x:Name="txtPort"
                         Grid.Row="3"
                         Grid.Column="1"
-                       
+
                         Margin="{StaticResource Margin4}"
                         HorizontalAlignment="Stretch" />
                 </Grid>
@@ -292,7 +292,7 @@
                     x:Name="gridWarpAmnezia"
                     Grid.Row="2"
                     IsVisible="False"
-                   
+
                    ><StackPanel HorizontalAlignment="Stretch">
                     <Grid Margin="4"><Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <TextBlock Text="Proxy" VerticalAlignment="Center"/>
@@ -301,8 +301,8 @@
                     <Button x:Name="btnWarpAmneziaGenerateKey" Content="Generate WARP Key" Margin="4" HorizontalAlignment="Left" />
                     <TextBlock x:Name="txtWarpAmneziaKeyStatus" Margin="4" TextWrapping="Wrap" />
 <TextBlock
-                       
-                       
+
+
                         Margin="{StaticResource Margin4}"
                         FontWeight="SemiBold"
                         Text="WARP AmneziaWG settings" />
@@ -327,23 +327,23 @@
 <Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Listen port" /><TextBox Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch" x:Name="txtWarpAwgListenPort" Margin="{StaticResource Margin4}" /></Grid>
 <Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Scan IP family" /><ComboBox
  Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"                        x:Name="cmbWarpAmneziaScanFamily"
-                       
-                       
+
+
                         Margin="{StaticResource Margin4}" /></Grid>
 <Grid Margin="0,2" ColumnDefinitions="160,*"><TextBlock HorizontalAlignment="Right" TextAlignment="Right" TextWrapping="Wrap" Margin="{StaticResource Margin4}" VerticalAlignment="Center" Text="Scan type" /><ComboBox
  Grid.Column="1" MinWidth="0" HorizontalAlignment="Stretch"                        x:Name="cmbWarpAmneziaScanMode"
-                       
-                       
+
+
                         Margin="{StaticResource Margin4}" /></Grid>
 <CheckBox
                         x:Name="chkWarpAmneziaAutoScan"
-                       
-                       
+
+
                         Margin="{StaticResource Margin4}"
                         HorizontalAlignment="Left" Content="Scan endpoints automatically on connect" />
 <WrapPanel
-                       
-                       
+
+
                         Margin="{StaticResource Margin4}"
                         Orientation="Horizontal">
                         <Button
@@ -358,8 +358,8 @@
                     </WrapPanel>
 <TextBlock
                         x:Name="tbWarpAmneziaScanStatus"
-                       
-                       
+
+
                         Margin="{StaticResource Margin4}"
                         TextWrapping="Wrap" />
 </StackPanel></Grid>
@@ -367,7 +367,7 @@
                     x:Name="gridWarpMasque"
                     Grid.Row="2"
                     IsVisible="False"
-                   
+
                    ><StackPanel HorizontalAlignment="Stretch">
                     <Grid Margin="4"><Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <TextBlock Text="Proxy" VerticalAlignment="Center"/>

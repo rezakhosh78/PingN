@@ -25,7 +25,7 @@ jobs:
         arch: [ x64, arm64 ]
     runs-on: ubuntu-latest
     env:
-      Target: |- 
+      Target: |-
         ${{
           case(
             inputs.target == 'windows-desktop', 'windows',
@@ -37,7 +37,7 @@ jobs:
           case(
             matrix.arch == 'x64', '64',
             matrix.arch
-          ) 
+          )
         }}
     steps:
     - name: Checkout
@@ -48,17 +48,17 @@ jobs:
       with:
         name: ${{ matrix.arch }}
         path: PingN-${{ env.Target }}-${{ env.Arch }}
-    
+
     - name: Get core bundle
       run: wget -nv -O "PingN-$Target-$Arch.zip" "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/master/v2rayN-$Target-$Arch.zip"
-    
+
     - name: Package zip archive
       run: 7z a -tZip PingN-$Target-$Arch.zip PingN-$Target-$Arch -mx1
 
-    - name: Rename windows-desktop 
+    - name: Rename windows-desktop
       if: inputs.target == 'windows-desktop'
       run: mv "PingN-$Target-$Arch.zip" "PingN-$Target-$Arch-desktop.zip"
-    
+
     - name: Upload zip artifact
       uses: actions/upload-artifact@v7
       with:

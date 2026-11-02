@@ -308,7 +308,7 @@
                         Binding="{Binding SubRemarks}"
                         Header="{x:Static resx:ResUI.LvSubscription}"
                         Tag="SubRemarks" />
-                    
+
                     <DataGridTextColumn
                         Width="100"
                         Binding="{Binding SpeedVal}"

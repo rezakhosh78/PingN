@@ -55,8 +55,8 @@ $ make
 
 ### Data types and definitions
 
-`client-side` means the param is not required to be the same on both server and client, while  
-`server-side` means this is mandatory the values are the same on server and on client  
+`client-side` means the param is not required to be the same on both server and client, while
+`server-side` means this is mandatory the values are the same on server and on client
 
 `range,x`, where x is the underlying type of left and right
 * Format: "a-b", or "a", or "(off)"
