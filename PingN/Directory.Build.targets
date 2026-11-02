@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'PingN' Or '$(MSBuildProjectName)' == 'PingN.Desktop'">
+    <DnsBundledRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</DnsBundledRid>
+    <DnsBundledRid Condition="'$(DnsBundledRid)' == '' And '$(OS)' == 'Windows_NT' And '$(PlatformTarget)' == 'x86'">win-x86</DnsBundledRid>
+    <DnsBundledRid Condition="'$(DnsBundledRid)' == '' And '$(OS)' == 'Windows_NT' And '$(PlatformTarget)' == 'ARM64'">win-arm64</DnsBundledRid>
+    <DnsBundledRid Condition="'$(DnsBundledRid)' == '' And '$(OS)' == 'Windows_NT'">win-x64</DnsBundledRid>
+  </PropertyGroup>
+  <ItemGroup Condition="('$(MSBuildProjectName)' == 'PingN' Or '$(MSBuildProjectName)' == 'PingN.Desktop') And '$(DnsBundledRid)' != ''">
+    <Content Include="$(MSBuildThisFileDirectory)ServiceLib/Resources/DnsTunnelCores/$(DnsBundledRid)/**/*">
+      <Link>bin/dnstunnels/%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <TargetPath>bin/dnstunnels/%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

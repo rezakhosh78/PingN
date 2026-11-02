@@ -1,0 +1,4 @@
+Desync runtime files (winws2.exe, WinDivert, Cygwin runtime, and Lua engine files) were copied from the Windows x64 core/desync directory of:
+https://github.com/rezakhosh78/BlackHole
+
+The bundled source revision reports BlackHole version 0.2.9 and Desync bundle commit 5b8b17f7b47894ca0b523de1da1806161a52d061. Component-specific licenses and notices are in PingN/PingN.Desktop/Tools/Desync. No BlackHole GUI or application source code is copied into PingN.
