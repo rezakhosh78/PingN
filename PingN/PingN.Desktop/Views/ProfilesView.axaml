@@ -265,12 +265,15 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Mode" Tag="Mode" Width="100" MinWidth="24" CanUserResize="True" CanUserSort="False" CanUserReorder="False">
+                    <DataGridTemplateColumn Header="Mode" Tag="Mode" Width="260" MinWidth="24" CanUserResize="True" CanUserSort="False" CanUserReorder="False">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid ClipToBounds="True"><StackPanel Orientation="Horizontal" Margin="4,0" VerticalAlignment="Center">
                                     <Border Margin="0,2,6,2" Padding="8,3" CornerRadius="6" Background="#1565C0" IsVisible="{Binding DesyncEnabled}">
                                         <TextBlock Text="Desync" Foreground="White" FontWeight="Bold" FontSize="12" />
+                                    </Border>
+                                    <Border Margin="0,2,6,2" Padding="8,3" CornerRadius="6" Background="#00897B" IsVisible="{Binding PsiphonOverEnabled}">
+                                        <TextBlock Text="Psiphon" Foreground="White" FontWeight="Bold" FontSize="12" />
                                     </Border>
                                     <Border Margin="0,2,6,2" Padding="8,3" CornerRadius="6" Background="#7B1FA2" IsVisible="{Binding SniSpoofingEnabled}">
                                         <TextBlock Text="SNI Spoofing" Foreground="White" FontWeight="Bold" FontSize="12" />
