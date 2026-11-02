@@ -28,6 +28,51 @@ public static class DnsTunnelRuntimeManager
         return item;
     }
 
+    private static int GetRandomLoopbackTcpPort(HashSet<int> excluded)
+    {
+        for (var attempt = 0; attempt < 64; attempt++)
+        {
+            using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            { ExclusiveAddressUse = true };
+            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            var port = ((IPEndPoint)socket.LocalEndPoint!).Port;
+            if (!excluded.Contains(port)) return port;
+        }
+        throw new IOException("Could not reserve a random local DNSTT SSH listener port.");
+    }
+
+    private static async Task AssignRandomTunnelPortAsync(ProfileItem profile, DnsTunnelSettings settings,
+        string label, Func<bool, string, Task>? log)
+    {
+        var previousPort = int.Parse(settings.TunnelPort);
+        var excluded = new HashSet<int> { profile.Port };
+        var socksInbound = AppManager.Instance.Config.Inbound
+            .FirstOrDefault(x => x.Protocol == nameof(EInboundProtocol.socks));
+        if (socksInbound is not null)
+        {
+            for (var offset = 0; offset < 7; offset++)
+            {
+                var port = (long)socksInbound.LocalPort + offset;
+                if (port is >= 1 and <= 65535) excluded.Add((int)port);
+            }
+        }
+
+        var selectedPort = GetRandomLoopbackTcpPort(excluded);
+        settings.TunnelPort = selectedPort.ToString(CultureInfo.InvariantCulture);
+        profile.SetProtocolExtra(profile.GetProtocolExtra() with { DnsTunnel = settings });
+
+        var stored = await AppManager.Instance.GetProfileItem(profile.IndexId);
+        if (stored is not null)
+        {
+            stored.SetProtocolExtra(stored.GetProtocolExtra() with { DnsTunnel = settings });
+            if (await ConfigHandler.AddSocksServer(AppManager.Instance.Config, stored) != 0)
+                throw new IOException("Could not save the random DNSTT tunnel port.");
+        }
+
+        await EmitAsync(label, settings, log,
+            $"Assigned random tunnel TCP port {selectedPort} (previous {previousPort}).");
+    }
+
     public static async Task StartAsync(ProfileItem profile, Func<bool, string, Task>? log, CancellationToken cancellationToken = default)
     {
         var settings = profile.GetProtocolExtra().DnsTunnel;
@@ -37,6 +82,8 @@ public static class DnsTunnelRuntimeManager
         settings.Validate(profile.Port);
         await StopAsync();
         var label = settings.Kind == "masterdns" ? "MasterDNS" : "DNSTT";
+        if (settings.Kind == "dnstt-ssh")
+            await AssignRandomTunnelPortAsync(profile, settings, label, log);
         await EmitAsync(label, settings, log, "Preparing client executable...");
         var exe = await DnsTunnelCoreInstaller.EnsureAsync(settings.Kind).WaitAsync(cancellationToken);
         await EmitAsync(label, settings, log, $"Using client: {exe}");
@@ -105,7 +152,11 @@ public static class DnsTunnelRuntimeManager
                     };
                     await EmitAsync(label, settings, log, "Connecting SSH through the DNS tunnel...");
                     var sshTimer = Stopwatch.StartNew();
-                    await ssh.ConnectAsync(lifetime.Token);
+                    try { await ssh.ConnectAsync(lifetime.Token); }
+                    catch (SshException ex)
+                    {
+                        throw new IOException("The DNSTT listener started, but the SSH handshake failed. Verify the tunnel domain and public key, the SSH server forwarded by DNSTT, and the configured SSH credentials. " + ex.Message, ex);
+                    }
                     await EmitAsync(label, settings, log, $"SSH connection completed in {sshTimer.Elapsed.TotalSeconds:F1} seconds.");
                     if (string.IsNullOrWhiteSpace(settings.HostKeySha256) && observedFingerprint is not null)
                     {
