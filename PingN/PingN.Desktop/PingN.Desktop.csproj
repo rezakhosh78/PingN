@@ -42,7 +42,7 @@
 
 	<ItemGroup>
 		<ProjectCapability Include="Avalonia" />
-		<AvaloniaResource Include="Assets\**" />
+		<AvaloniaResource Include="Assets\**" Exclude="Assets\**\*.axaml" />
 		<ProjectReference Include="..\GlobalHotKeys\src\GlobalHotKeys\GlobalHotKeys.csproj" />
 		<ProjectReference Include="..\ServiceLib\ServiceLib.csproj" />
 	</ItemGroup>
