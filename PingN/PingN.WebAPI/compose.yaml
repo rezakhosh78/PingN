@@ -1,0 +1,26 @@
+services:
+  PingN-web:
+    build:
+      context: ../..
+      dockerfile: PingN/PingN.WebAPI/Containerfile
+      args:
+        RID: ${PingN_BUILD_RID:-linux-x64}
+    image: localhost/PingN-web:latest
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:5080
+      PingN_WEB_API_KEY: ${PingN_WEB_API_KEY:?Set PingN_WEB_API_KEY in your environment}
+      PingN_WEB_ALLOWED_ORIGINS: ${PingN_WEB_ALLOWED_ORIGINS:-}
+      PingN_WEB_AUTOSTART: "true"
+      PingN_WEB_PROXY_PORT: ${PingN_PROXY_PORT:-10808}
+      PingN_WEB_PROXY_LISTEN_ALL: "true"
+      PingN_DATA_HOME: /data
+    ports:
+      - "127.0.0.1:${PingN_WEB_PORT:-5080}:5080/tcp"
+      - "127.0.0.1:${PingN_PROXY_PORT:-10808}:${PingN_PROXY_PORT:-10808}/tcp"
+      - "127.0.0.1:${PingN_PROXY_PORT:-10808}:${PingN_PROXY_PORT:-10808}/udp"
+    volumes:
+      - PingN-data:/data
+
+volumes:
+  PingN-data:
