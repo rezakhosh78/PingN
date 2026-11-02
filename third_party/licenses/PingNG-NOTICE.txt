@@ -1,2 +1,0 @@
-PingNG source reference: https://github.com/rezakhosh78/PingNG
-This fork uses the documented WARP profile concepts as a porting reference. No PingNG application source files are copied into PingN.
